@@ -100,22 +100,37 @@ void AdminPortal::setup(void)
   }
   Serial.println("mDNS responder started");
 
-  _webServer->onNotFound(onNotFound);
-  /*return index page which is stored in serverIndex */
+  // Display landing page.
   _webServer->on("/", HTTP_GET, [&](AsyncWebServerRequest *request) {
     if (!request->authenticate(www_username, www_password))
       return request->requestAuthentication();
     request->send(SPIFFS, "/index.html", String(), false, processor);
   });
 
-  _webServer->on("/serverIndex", HTTP_GET, [&](AsyncWebServerRequest *request) {
+  // Display configuration page.
+  _webServer->on("/config", HTTP_GET, [&](AsyncWebServerRequest *request) {
     if (!request->authenticate(www_username, www_password))
       return request->requestAuthentication();
-    request->send(200, "text/html", loginIndex);
+    request->send(SPIFFS, "/config.html", String(), false, processor);
+  });
+
+  // Display firmware upgrade page.
+  _webServer->on("/upgrade", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    if (!request->authenticate(www_username, www_password))
+      return request->requestAuthentication();
+    request->send(SPIFFS, "/upgrade.html", String(), false, processor);
   });
 
   /*handling uploading firmware file */
-  _webServer->on("/upload", HTTP_POST, [](AsyncWebServerRequest *request) { request->send(200); }, onUpload);
+  _webServer->on("/uploadfw", HTTP_POST, [](AsyncWebServerRequest *request) { request->send(200); }, onUpload);
+
+  // Display landing page.
+  _webServer->on("/logout", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    return request->requestAuthentication();
+  });
+
+  // Display 404 if no pages was found.
+  _webServer->onNotFound(onNotFound);
 
   _webServer->begin();
 }
