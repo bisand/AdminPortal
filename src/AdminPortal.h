@@ -33,7 +33,7 @@ class AdminPortal
     const char *www_realm = "Custom Auth Realm";
     String authFailResponse = "Authentication Failed";
 
-    static void AdminPortal::onNotFound(AsyncWebServerRequest *request);
+    static void onNotFound(AsyncWebServerRequest *request);
     static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 
   public:
