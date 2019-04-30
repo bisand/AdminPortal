@@ -28,11 +28,6 @@ class AdminPortal
     char *_ssid;
     char *_password;
 
-    const char *www_username = "admin";
-    const char *www_password = "esp32";
-    const char *www_realm = "Custom Auth Realm";
-    String authFailResponse = "Authentication Failed";
-
     static void onNotFound(AsyncWebServerRequest *request);
     static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 

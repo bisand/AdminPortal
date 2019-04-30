@@ -29,14 +29,15 @@ AdminPortal::~AdminPortal()
 const char *loginIndex = "";
 
 // Replaces placeholder with LED state value
-String processor(const String& var){
+String processor(const String &var)
+{
   Serial.println(var);
-  if(var == "VERSION"){
+  if (var == "VERSION")
+  {
     return "v1.0";
   }
   return String();
 }
-
 
 void AdminPortal::onNotFound(AsyncWebServerRequest *request)
 {
@@ -73,6 +74,11 @@ void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size
   }
 }
 
+const char *www_username = "admin";
+const char *www_password = "esp32";
+const char *www_realm = "Custom Auth Realm";
+String authFailResponse = "Authentication Failed";
+
 /*
  * setup function
  */
@@ -100,22 +106,38 @@ void AdminPortal::setup(void)
   }
   Serial.println("mDNS responder started");
 
+  if (!SPIFFS.begin(true))
+  {
+    Serial.println("An Error has occurred while mounting SPIFFS");
+    return;
+  }
+  
   // Display landing page.
-  _webServer->on("/", HTTP_GET, [&](AsyncWebServerRequest *request) {
-    if (!request->authenticate(www_username, www_password))
-      return request->requestAuthentication();
+  _webServer->on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/index.html", String(), false, processor);
   });
 
+  _webServer->on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/index.html", String(), false, processor);
+  });
+
+  _webServer->on("/docs.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/docs.html", String(), false, processor);
+  });
+
+  _webServer->on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/style.css", "text/css");
+  });
+
   // Display configuration page.
-  _webServer->on("/config", HTTP_GET, [&](AsyncWebServerRequest *request) {
+  _webServer->on("/config.html", HTTP_GET, [](AsyncWebServerRequest *request) {
     if (!request->authenticate(www_username, www_password))
       return request->requestAuthentication();
     request->send(SPIFFS, "/config.html", String(), false, processor);
   });
 
   // Display firmware upgrade page.
-  _webServer->on("/upgrade", HTTP_GET, [&](AsyncWebServerRequest *request) {
+  _webServer->on("/upgrade.html", HTTP_GET, [](AsyncWebServerRequest *request) {
     if (!request->authenticate(www_username, www_password))
       return request->requestAuthentication();
     request->send(SPIFFS, "/upgrade.html", String(), false, processor);
@@ -125,8 +147,10 @@ void AdminPortal::setup(void)
   _webServer->on("/uploadfw", HTTP_POST, [](AsyncWebServerRequest *request) { request->send(200); }, onUpload);
 
   // Display landing page.
-  _webServer->on("/logout", HTTP_GET, [&](AsyncWebServerRequest *request) {
-    return request->requestAuthentication();
+  _webServer->on("/logout", HTTP_GET, [](AsyncWebServerRequest *request) {
+    if (request->authenticate(www_username, www_password))
+      return request->requestAuthentication();
+    request->send(SPIFFS, "/index.html", String(), false, processor);
   });
 
   // Display 404 if no pages was found.
