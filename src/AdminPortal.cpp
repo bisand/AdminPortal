@@ -56,7 +56,7 @@ void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size
   }
   else if (!final)
   {
-    if (Update.write(data, len) != index)
+    if (Update.write(data, len) != len)
     {
       Update.printError(Serial);
     }
@@ -121,23 +121,23 @@ void AdminPortal::setup(void)
     request->send(SPIFFS, "/index.html", String(), false, processor);
   });
 
-  _webServer->on("/docs.html", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/docs.html", String(), false, processor);
-  });
-
   _webServer->on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/style.css", "text/css");
   });
 
+  _webServer->on("/docs", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/docs.html", String(), false, processor);
+  });
+
   // Display configuration page.
-  _webServer->on("/config.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+  _webServer->on("/config", HTTP_GET, [](AsyncWebServerRequest *request) {
     if (!request->authenticate(www_username, www_password))
       return request->requestAuthentication();
     request->send(SPIFFS, "/config.html", String(), false, processor);
   });
 
   // Display firmware upgrade page.
-  _webServer->on("/upgrade.html", HTTP_GET, [](AsyncWebServerRequest *request) {
+  _webServer->on("/upgrade", HTTP_GET, [](AsyncWebServerRequest *request) {
     if (!request->authenticate(www_username, www_password))
       return request->requestAuthentication();
     request->send(SPIFFS, "/upgrade.html", String(), false, processor);
