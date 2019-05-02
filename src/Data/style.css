@@ -11,4 +11,11 @@ input{
 }
 label{
     white-space: nowrap;
+    color: #9b8a8a;
+}
+.col.c2{
+    padding-top: 10px;
+}
+.btn-a{
+    color: #bce6f3;
 }
