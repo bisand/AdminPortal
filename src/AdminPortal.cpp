@@ -17,6 +17,7 @@ AdminPortal::AdminPortal()
   _ssid = (char *)"EngineMonitor";
   _host = (char *)"EngineMonitor";
   _password = (char *)"Password123";
+  _config = new Config();
 }
 
 AdminPortal::~AdminPortal()
@@ -73,6 +74,76 @@ void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size
     }
   }
 }
+
+// Read config file.
+void AdminPortal::readConfigFile()
+{
+  if (SPIFFS.begin())
+  {
+    if(isDebug) Serial.println("mounted file system");
+    if (SPIFFS.exists("/cfg.json"))
+    {
+      //file exists, reading and loading
+      if(isDebug) Serial.println("reading config file");
+      File configFile = SPIFFS.open("/cfg.json", "r");
+      if (configFile)
+      {
+        if(isDebug) Serial.println("opened config file");
+        size_t size = configFile.size();
+        // Allocate a buffer to store contents of the file.
+        std::unique_ptr<char[]> buf(new char[size]);
+
+        if(isDebug) Serial.println(buf.get());
+        configFile.readBytes(buf.get(), size);
+
+        DynamicJsonDocument doc(1024);
+        DeserializationError error = deserializeJson(doc, configFile);
+        if (!error)
+        {
+          if(isDebug) Serial.println("\nparsed json");
+
+          _config->flow_mlpp_in = doc["flow_mlpp_in"];
+          _config->flow_mlpp_out = doc["flow_mlpp_out"];
+          _config->flow_moving_avg = doc["flow_moving_avg"];
+        }
+        else
+        {
+          if(isDebug) Serial.println("failed to load json config");
+        }
+        configFile.close();
+      }
+    }
+  }
+  else
+  {
+    if(isDebug) Serial.println("failed to mount FS");
+  }
+  //end read
+}
+
+// Save config file.
+void AdminPortal::writeConfigFile()
+{
+  if(isDebug) Serial.println("saving config");
+  DynamicJsonDocument doc(1024);
+  doc["flow_mlpp_in"] = _config->flow_mlpp_in;
+  doc["flow_mlpp_out"] = _config->flow_mlpp_out;
+  doc["flow_moving_avg"] = _config->flow_moving_avg;
+
+  File configFile = SPIFFS.open("/cfg.json", "w");
+  if (!configFile)
+  {
+    if(isDebug) Serial.println("failed to open config file for writing");
+  }
+
+  // Serialize JSON to file
+  if (serializeJson(doc, configFile) == 0) {
+    Serial.println(F("Failed to write to file"));
+  }
+  configFile.close();
+  //end save
+}
+
 
 const char *www_username = "admin";
 const char *www_password = "esp32";

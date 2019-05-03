@@ -11,7 +11,16 @@
 #include <ESPmDNS.h>
 #include <Update.h>
 #endif
+#include "ArduinoJson.h"
 #include "SPIFFS.h"
+
+struct Config
+{
+  public:
+    float flow_mlpp_in;
+    float flow_mlpp_out;
+    int flow_moving_avg;
+};
 
 class AdminPortal
 {
@@ -27,10 +36,15 @@ class AdminPortal
     char *_host;
     char *_ssid;
     char *_password;
+    bool isDebug;
+
+    Config *_config;
+
+    void readConfigFile();
+    void writeConfigFile();
 
     static void onNotFound(AsyncWebServerRequest *request);
     static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
-
   public:
     AdminPortal();
     ~AdminPortal();
