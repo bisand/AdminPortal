@@ -6,7 +6,7 @@
 
 #include "AdminPortal.h"
 
-AdminPortal::AdminPortal(Config config)
+AdminPortal::AdminPortal()
 {
 #ifdef ESP8266
   _webServer = new ESP8266WebServer(80);
@@ -17,7 +17,6 @@ AdminPortal::AdminPortal(Config config)
   _ssid = (char *)"EngineMonitor";
   _host = (char *)"EngineMonitor";
   _password = (char *)"Password123";
-  _config = config;
 }
 
 AdminPortal::~AdminPortal()
@@ -78,31 +77,45 @@ void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size
 }
 
 // Read config file.
-void AdminPortal::readConfigFile()
+std::map<String, String> AdminPortal::readConfigFile()
 {
+  std::map<String, String> result;
   if (SPIFFS.begin())
   {
-    if(isDebug) Serial.println("mounted file system");
+    if (isDebug)
+      Serial.println("mounted file system");
     if (SPIFFS.exists("/cfg.json"))
     {
       //file exists, reading and loading
-      if(isDebug) Serial.println("reading config file");
+      if (isDebug)
+        Serial.println("reading config file");
       File configFile = SPIFFS.open("/cfg.json", "r");
       if (configFile)
       {
-        if(isDebug) Serial.println("opened config file");
+        if (isDebug)
+          Serial.println("opened config file");
         size_t size = configFile.size();
         // Allocate a buffer to store contents of the file.
         std::unique_ptr<char[]> buf(new char[size]);
 
-        if(isDebug) Serial.println(buf.get());
+        if (isDebug)
+          Serial.println(buf.get());
         configFile.readBytes(buf.get(), size);
 
         DynamicJsonDocument doc(1024);
         DeserializationError error = deserializeJson(doc, configFile);
         if (!error)
         {
-          if(isDebug) Serial.println("\nparsed json");
+          if (isDebug)
+            Serial.println("\nparsed json");
+
+          JsonObject root = doc.as<JsonObject>();
+
+          // using C++11 syntax (preferred):
+          for (JsonPair kv : root)
+          {
+            result[kv.key().c_str()] = kv.value().as<String>();
+          }
 
           // _config->flow_mlpp_in = doc["flow_mlpp_in"];
           // _config->flow_mlpp_out = doc["flow_mlpp_out"];
@@ -110,7 +123,8 @@ void AdminPortal::readConfigFile()
         }
         else
         {
-          if(isDebug) Serial.println("failed to load json config");
+          if (isDebug)
+            Serial.println("failed to load json config");
         }
         configFile.close();
       }
@@ -118,34 +132,42 @@ void AdminPortal::readConfigFile()
   }
   else
   {
-    if(isDebug) Serial.println("failed to mount FS");
+    if (isDebug)
+      Serial.println("failed to mount FS");
   }
+  return result;
   //end read
 }
 
 // Save config file.
-void AdminPortal::writeConfigFile()
+void AdminPortal::writeConfigFile(std::map<String, String> config)
 {
-  if(isDebug) Serial.println("saving config");
+  if (isDebug)
+    Serial.println("saving config");
   DynamicJsonDocument doc(1024);
-  // doc["flow_mlpp_in"] = _config->flow_mlpp_in;
-  // doc["flow_mlpp_out"] = _config->flow_mlpp_out;
-  // doc["flow_moving_avg"] = _config->flow_moving_avg;
+
+  // Dynamically map values.
+  std::map<String, String>::iterator it;
+  for (it = config.begin(); it != config.end(); it++)
+  {
+    doc[it->first] = it->second;
+  }
 
   File configFile = SPIFFS.open("/cfg.json", "w");
   if (!configFile)
   {
-    if(isDebug) Serial.println("failed to open config file for writing");
+    if (isDebug)
+      Serial.println("failed to open config file for writing");
   }
 
   // Serialize JSON to file
-  if (serializeJson(doc, configFile) == 0) {
+  if (serializeJson(doc, configFile) == 0)
+  {
     Serial.println(F("Failed to write to file"));
   }
   configFile.close();
   //end save
 }
-
 
 const char *www_username = "admin";
 const char *www_password = "esp32";
@@ -184,7 +206,7 @@ void AdminPortal::setup(void)
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
-  
+
   // Display landing page.
   _webServer->on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/index.html", String(), false, processor);

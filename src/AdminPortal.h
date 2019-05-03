@@ -17,50 +17,6 @@
 #include <memory>
 #include <map>
 
-class Config
-{
-  private:
-    class ConfigElement
-    {
-      public:
-        int *valInt;
-        float *valFloat;
-        String *valString;
-    };
-    std::map<String, ConfigElement*> _config;
-  public:
-    void AddValue(String key, int value){
-      ConfigElement *ce = new ConfigElement();
-      ce->valInt = new int(value);
-      _config[key] = ce;
-    }
-    void AddValue(String key, float value){
-      ConfigElement *ce = new ConfigElement();
-      ce->valFloat = new float(value);
-      _config[key] = ce;
-    }
-    void AddValue(String key, String value){
-      ConfigElement *ce = new ConfigElement();
-      ce->valString = new String(value);
-      _config[key] = ce;
-    }
-    String GetStringValue(String key)
-    {
-      ConfigElement *ce = _config[key];
-      return *ce->valString;
-    }
-    int GetIntValue(String key)
-    {
-      ConfigElement *ce = _config[key];
-      return *ce->valInt;
-    }
-    float GetFloatValue(String key)
-    {
-      ConfigElement *ce = _config[key];
-      return *ce->valFloat;
-    }
-};
-
 class AdminPortal
 {
 private:
@@ -77,17 +33,15 @@ private:
   char *_password;
   bool isDebug;
 
-  Config _config;
-
-  void readConfigFile();
-  void writeConfigFile();
-
   static void onNotFound(AsyncWebServerRequest *request);
   static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 
 public:
-  AdminPortal(Config config);
+  AdminPortal();
   ~AdminPortal();
+
+  std::map<String, String> readConfigFile();
+  void writeConfigFile(std::map<String, String> config);
 
   void setup();
   void loop();
