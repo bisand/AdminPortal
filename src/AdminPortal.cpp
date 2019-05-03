@@ -77,9 +77,24 @@ void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size
 }
 
 // Read config file.
-std::map<String, String> AdminPortal::readConfigFile()
+void AdminPortal::deleteConfig()
 {
   std::map<String, String> result;
+  if (SPIFFS.begin())
+  {
+    if (isDebug)
+      Serial.println("mounted file system");
+    if (SPIFFS.exists("/cfg.json"))
+    {
+      SPIFFS.remove("/cfg.json");
+    }
+  }
+}
+
+// Read config file.
+std::map<String, ConfigElement*> AdminPortal::loadConfig()
+{
+  std::map<String, ConfigElement*> result;
   if (SPIFFS.begin())
   {
     if (isDebug)
@@ -112,7 +127,9 @@ std::map<String, String> AdminPortal::readConfigFile()
           JsonObject root = doc.as<JsonObject>();
           for (JsonPair kv : root)
           {
-            result[kv.key().c_str()] = kv.value().as<String>();
+            JsonVariant v = kv.value();
+            ConfigElement ce = v.as<ConfigElement>();
+            result[kv.key().c_str()] = &ce;
           }
         }
         else
@@ -134,14 +151,14 @@ std::map<String, String> AdminPortal::readConfigFile()
 }
 
 // Save config file.
-void AdminPortal::writeConfigFile(std::map<String, String> config)
+void AdminPortal::saveConfig(std::map<String, ConfigElement*> config)
 {
   if (isDebug)
     Serial.println("saving config");
   DynamicJsonDocument doc(1024);
 
   // Dynamically map values.
-  std::map<String, String>::iterator it;
+  std::map<String, ConfigElement*>::iterator it;
   for (it = config.begin(); it != config.end(); it++)
   {
     doc[it->first] = it->second;

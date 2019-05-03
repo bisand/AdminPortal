@@ -17,6 +17,42 @@
 #include <memory>
 #include <map>
 
+class ConfigElement
+{
+  public:
+    String label;
+};
+
+class ConfigString : public ConfigElement
+{
+  public:
+    String value;
+};
+
+class ConfigInt : public ConfigElement
+{
+  public:
+    int value;
+};
+
+class ConfigFloat : public ConfigElement
+{
+  public:
+    float value;
+};
+
+class ConfigDouble : public ConfigElement
+{
+  public:
+    double value;
+};
+
+class ConfigLong : public ConfigElement
+{
+  public:
+    long value;
+};
+
 class AdminPortal
 {
 private:
@@ -40,8 +76,9 @@ public:
   AdminPortal();
   ~AdminPortal();
 
-  std::map<String, String> readConfigFile();
-  void writeConfigFile(std::map<String, String> config);
+  std::map<String, ConfigElement*> loadConfig();
+  void saveConfig(std::map<String, ConfigElement*> config);
+  void deleteConfig();
 
   void setup();
   void loop();
