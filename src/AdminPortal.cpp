@@ -110,16 +110,10 @@ std::map<String, String> AdminPortal::readConfigFile()
             Serial.println("\nparsed json");
 
           JsonObject root = doc.as<JsonObject>();
-
-          // using C++11 syntax (preferred):
           for (JsonPair kv : root)
           {
             result[kv.key().c_str()] = kv.value().as<String>();
           }
-
-          // _config->flow_mlpp_in = doc["flow_mlpp_in"];
-          // _config->flow_mlpp_out = doc["flow_mlpp_out"];
-          // _config->flow_moving_avg = doc["flow_moving_avg"];
         }
         else
         {
