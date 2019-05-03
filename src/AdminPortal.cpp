@@ -17,7 +17,6 @@ AdminPortal::AdminPortal()
   _ssid = (char *)"EngineMonitor";
   _host = (char *)"EngineMonitor";
   _password = (char *)"Password123";
-  _config = new Config();
 }
 
 AdminPortal::~AdminPortal()
@@ -40,11 +39,13 @@ String processor(const String &var)
   return String();
 }
 
+// Handle 404 not found responses.
 void AdminPortal::onNotFound(AsyncWebServerRequest *request)
 {
   request->send(SPIFFS, "/404.html", String(), false, processor);
 }
 
+// Handles upload of firmware.
 void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
 {
   if (!index)
@@ -102,9 +103,9 @@ void AdminPortal::readConfigFile()
         {
           if(isDebug) Serial.println("\nparsed json");
 
-          _config->flow_mlpp_in = doc["flow_mlpp_in"];
-          _config->flow_mlpp_out = doc["flow_mlpp_out"];
-          _config->flow_moving_avg = doc["flow_moving_avg"];
+          // _config->flow_mlpp_in = doc["flow_mlpp_in"];
+          // _config->flow_mlpp_out = doc["flow_mlpp_out"];
+          // _config->flow_moving_avg = doc["flow_moving_avg"];
         }
         else
         {
@@ -126,9 +127,9 @@ void AdminPortal::writeConfigFile()
 {
   if(isDebug) Serial.println("saving config");
   DynamicJsonDocument doc(1024);
-  doc["flow_mlpp_in"] = _config->flow_mlpp_in;
-  doc["flow_mlpp_out"] = _config->flow_mlpp_out;
-  doc["flow_moving_avg"] = _config->flow_moving_avg;
+  // doc["flow_mlpp_in"] = _config->flow_mlpp_in;
+  // doc["flow_mlpp_out"] = _config->flow_mlpp_out;
+  // doc["flow_moving_avg"] = _config->flow_moving_avg;
 
   File configFile = SPIFFS.open("/cfg.json", "w");
   if (!configFile)

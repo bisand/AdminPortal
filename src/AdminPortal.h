@@ -13,42 +13,36 @@
 #endif
 #include "ArduinoJson.h"
 #include "SPIFFS.h"
-
-struct Config
-{
-  public:
-    float flow_mlpp_in;
-    float flow_mlpp_out;
-    int flow_moving_avg;
-};
+#include <iostream>
+#include <memory>
+#include <map>
 
 class AdminPortal
 {
-  private:
+private:
 #ifdef ESP8266
-    ESP8266WebServer *_webServer;
+  ESP8266WebServer *_webServer;
 #else
-    AsyncWebServer *_webServer;
+  AsyncWebServer *_webServer;
 #endif
-    unsigned long _currMillis = 0;
-    unsigned long _interval = 1;
-    IPAddress *_apIP;
-    char *_host;
-    char *_ssid;
-    char *_password;
-    bool isDebug;
+  unsigned long _currMillis = 0;
+  unsigned long _interval = 1;
+  IPAddress *_apIP;
+  char *_host;
+  char *_ssid;
+  char *_password;
+  bool isDebug;
 
-    Config *_config;
+  void readConfigFile();
+  void writeConfigFile();
 
-    void readConfigFile();
-    void writeConfigFile();
+  static void onNotFound(AsyncWebServerRequest *request);
+  static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 
-    static void onNotFound(AsyncWebServerRequest *request);
-    static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
-  public:
-    AdminPortal();
-    ~AdminPortal();
+public:
+  AdminPortal();
+  ~AdminPortal();
 
-    void setup();
-    void loop();
+  void setup();
+  void loop();
 };

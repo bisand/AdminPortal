@@ -1,10 +1,12 @@
 #include <Arduino.h>
 #include "AdminPortal.h"
 
-AdminPortal *portal = new AdminPortal();
+AdminPortal *portal;
 
 void setup()
 {
+  portal = new AdminPortal();
+
   portal->setup();
 }
 
