@@ -5,7 +5,10 @@ AdminPortal *portal;
 
 void setup()
 {
-  portal = new AdminPortal();
+  Config *config = new Config();
+  config->AddValue("Test1", 0);
+  config->AddValue("Test2", (float)0.0);
+  portal = new AdminPortal(*config);
 
   portal->setup();
 }

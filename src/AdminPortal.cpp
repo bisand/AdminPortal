@@ -6,7 +6,7 @@
 
 #include "AdminPortal.h"
 
-AdminPortal::AdminPortal()
+AdminPortal::AdminPortal(Config config)
 {
 #ifdef ESP8266
   _webServer = new ESP8266WebServer(80);
@@ -17,6 +17,7 @@ AdminPortal::AdminPortal()
   _ssid = (char *)"EngineMonitor";
   _host = (char *)"EngineMonitor";
   _password = (char *)"Password123";
+  _config = config;
 }
 
 AdminPortal::~AdminPortal()
