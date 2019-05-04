@@ -92,9 +92,9 @@ void AdminPortal::deleteConfig()
 }
 
 // Read config file.
-std::map<String, ConfigElement*> AdminPortal::loadConfig()
+std::map<String, String> AdminPortal::loadConfig()
 {
-  std::map<String, ConfigElement*> result;
+  std::map<String, String> result;
   if (SPIFFS.begin())
   {
     if (isDebug)
@@ -127,9 +127,7 @@ std::map<String, ConfigElement*> AdminPortal::loadConfig()
           JsonObject root = doc.as<JsonObject>();
           for (JsonPair kv : root)
           {
-            JsonVariant v = kv.value();
-            ConfigElement ce = v.as<ConfigElement>();
-            result[kv.key().c_str()] = &ce;
+            result[kv.key().c_str()] = kv.value().as<String>();
           }
         }
         else
@@ -151,14 +149,14 @@ std::map<String, ConfigElement*> AdminPortal::loadConfig()
 }
 
 // Save config file.
-void AdminPortal::saveConfig(std::map<String, ConfigElement*> config)
+void AdminPortal::saveConfig(std::map<String, String> config)
 {
   if (isDebug)
     Serial.println("saving config");
   DynamicJsonDocument doc(1024);
 
   // Dynamically map values.
-  std::map<String, ConfigElement*>::iterator it;
+  std::map<String, String>::iterator it;
   for (it = config.begin(); it != config.end(); it++)
   {
     doc[it->first] = it->second;
@@ -178,6 +176,39 @@ void AdminPortal::saveConfig(std::map<String, ConfigElement*> config)
   }
   configFile.close();
   //end save
+}
+
+void AdminPortal::addConfigFormElement(String name, String label, String group, String value)
+{
+  if (!_configFormElements)
+    _configFormElements = new std::list<ConfigFormElement *>();
+
+  ConfigFormElement *configFormElement = new ConfigFormElement(name, label, group, value);
+  _configFormElements->push_back(configFormElement);
+}
+
+String AdminPortal::getConfigForm()
+{
+  String result;
+  if (!_configFormElements)
+    return result;
+
+  std::list<ConfigFormElement *>::iterator it;
+  String lastGroup = "";
+  for (it = _configFormElements->begin(); it != _configFormElements->end(); ++it)
+  {
+    String tmp = "";
+    if (lastGroup != (*it)->group) {
+      tmp += "<div class=\"row\"><div class=\"col c12\"><h3>"+(*it)->group+"</h3></div></div>";
+      lastGroup = (*it)->group;
+    }
+    tmp += "<div class=\"row\">";
+    tmp += "<div class=\"col c2\"><label for=\"" + (*it)->name + "\"></label></div>";
+    tmp += "<div class=\"col c10\"><input type=\"number\" name=\"" + (*it)->name + "\" value=\"%" + (*it)->name + "%\" class=\"smooth\" /></div>";
+    tmp += "</div>";
+  }
+
+  return result;
 }
 
 const char *www_username = "admin";

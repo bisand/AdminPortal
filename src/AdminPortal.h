@@ -1,56 +1,28 @@
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
-#include <ESP8266WebServer.h>
 #else
 #include <WiFi.h>
-#include <WiFiClient.h>
-#include <WiFiAP.h>
-#include <DNSServer.h>
-#include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
-#include <Update.h>
 #endif
+#include <Update.h>
+#include <ESPAsyncWebServer.h>
 #include "ArduinoJson.h"
 #include "SPIFFS.h"
-#include <iostream>
-#include <memory>
+#include <list>
 #include <map>
 
-class ConfigElement
+class ConfigFormElement
 {
-  public:
-    String label;
-};
+private:
+public:
+  String name;
+  String label;
+  String group;
+  String value;
 
-class ConfigString : public ConfigElement
-{
-  public:
-    String value;
-};
-
-class ConfigInt : public ConfigElement
-{
-  public:
-    int value;
-};
-
-class ConfigFloat : public ConfigElement
-{
-  public:
-    float value;
-};
-
-class ConfigDouble : public ConfigElement
-{
-  public:
-    double value;
-};
-
-class ConfigLong : public ConfigElement
-{
-  public:
-    long value;
+  ConfigFormElement(String name, String label, String group, String value);
+  ~ConfigFormElement();
 };
 
 class AdminPortal
@@ -69,16 +41,22 @@ private:
   char *_password;
   bool isDebug;
 
+  std::list<ConfigFormElement *> *_configFormElements;
+
   static void onNotFound(AsyncWebServerRequest *request);
   static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
+
+  String getConfigForm();
 
 public:
   AdminPortal();
   ~AdminPortal();
 
-  std::map<String, ConfigElement*> loadConfig();
-  void saveConfig(std::map<String, ConfigElement*> config);
+  std::map<String, String> loadConfig();
+  void saveConfig(std::map<String, String> config);
   void deleteConfig();
+
+  void addConfigFormElement(String name, String label, String group, String value);
 
   void setup();
   void loop();
