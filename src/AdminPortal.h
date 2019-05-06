@@ -1,10 +1,5 @@
-#ifdef ESP8266
-#include <ESP8266WiFi.h>
-#include <DNSServer.h>
-#else
 #include <WiFi.h>
 #include <ESPmDNS.h>
-#endif
 #include <Update.h>
 #include <ESPAsyncWebServer.h>
 #include "ArduinoJson.h"
@@ -28,11 +23,7 @@ public:
 class AdminPortal
 {
 private:
-#ifdef ESP8266
-  ESP8266WebServer *_webServer;
-#else
   AsyncWebServer *_webServer;
-#endif
   unsigned long _currMillis = 0;
   unsigned long _interval = 1;
   IPAddress *_apIP;
