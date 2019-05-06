@@ -1,0 +1,56 @@
+{
+    "name": "AdminPortal",
+    "description": "Portal for configuring ESP32/ESP8266 via web interface.",
+    "keywords": [
+        "http",
+        "config"
+    ],
+    "authors": [
+        {
+            "email": null,
+            "url": null,
+            "maintainer": true,
+            "name": "André Biseth"
+        }
+    ],
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/bisand/AdminPortal.git"
+    },
+    "version": "0.2.0",
+    "license": "LGPL-3.0",
+    "frameworks": [
+        "arduino"
+    ],
+    "platforms": [
+        "espressif8266",
+        "espressif32"
+    ],
+    "dependencies": [
+        {
+            "name": "ArduinoJson",
+            "platforms": "espressif8266"
+        },
+        {
+            "name": "ArduinoJson",
+            "platforms": "espressif32"
+        },
+        {
+            "name": "ESP8266WiFi",
+            "platforms": "espressif8266"
+        },
+        {
+            "name": "WiFi",
+            "platforms": "espressif32"
+        },
+        {
+            "name": "ESP Async WebServer",
+            "platforms": "espressif8266"
+        },
+        {
+            "name": "ESP Async WebServer",
+            "platforms": "espressif32"
+        }
+    ],
+    "id": 306
+}
