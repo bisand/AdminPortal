@@ -40,6 +40,14 @@
             "platforms": "espressif32"
         }, 
         {
+            "name": "DNSServer", 
+            "platforms": "espressif8266"
+        }, 
+        {
+            "name": "ESPmDNS", 
+            "platforms": "espressif32"
+        }, 
+        {
             "name": "ESP8266WiFi", 
             "platforms": "espressif8266"
         }, 
