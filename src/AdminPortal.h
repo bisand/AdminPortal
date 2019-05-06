@@ -1,54 +1,63 @@
 #ifdef ESP8266
 #include <ESP8266WiFi.h>
 #include <DNSServer.h>
-#include <ESP8266WebServer.h>
 #else
 #include <WiFi.h>
-#include <WiFiClient.h>
-#include <WiFiAP.h>
-#include <DNSServer.h>
-#include <ESPAsyncWebServer.h>
 #include <ESPmDNS.h>
-#include <Update.h>
 #endif
+#include <Update.h>
+#include <ESPAsyncWebServer.h>
 #include "ArduinoJson.h"
 #include "SPIFFS.h"
+#include <list>
+#include <map>
 
-struct Config
+class ConfigFormElement
 {
-  public:
-    float flow_mlpp_in;
-    float flow_mlpp_out;
-    int flow_moving_avg;
+private:
+public:
+  String name;
+  String label;
+  String group;
+  String value;
+
+  ConfigFormElement(String name, String label, String group, String value);
+  ~ConfigFormElement();
 };
 
 class AdminPortal
 {
-  private:
+private:
 #ifdef ESP8266
-    ESP8266WebServer *_webServer;
+  ESP8266WebServer *_webServer;
 #else
-    AsyncWebServer *_webServer;
+  AsyncWebServer *_webServer;
 #endif
-    unsigned long _currMillis = 0;
-    unsigned long _interval = 1;
-    IPAddress *_apIP;
-    char *_host;
-    char *_ssid;
-    char *_password;
-    bool isDebug;
+  unsigned long _currMillis = 0;
+  unsigned long _interval = 1;
+  IPAddress *_apIP;
+  char *_host;
+  char *_ssid;
+  char *_password;
+  bool isDebug;
 
-    Config *_config;
+  std::list<ConfigFormElement *> *_configFormElements;
 
-    void readConfigFile();
-    void writeConfigFile();
+  static void onNotFound(AsyncWebServerRequest *request);
+  static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 
-    static void onNotFound(AsyncWebServerRequest *request);
-    static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
-  public:
-    AdminPortal();
-    ~AdminPortal();
+  String getConfigForm();
 
-    void setup();
-    void loop();
+public:
+  AdminPortal();
+  ~AdminPortal();
+
+  std::map<String, String> loadConfig();
+  void saveConfig(std::map<String, String> config);
+  void deleteConfig();
+
+  void addConfigFormElement(String name, String label, String group, String value);
+
+  void setup();
+  void loop();
 };

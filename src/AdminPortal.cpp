@@ -17,7 +17,6 @@ AdminPortal::AdminPortal()
   _ssid = (char *)"EngineMonitor";
   _host = (char *)"EngineMonitor";
   _password = (char *)"Password123";
-  _config = new Config();
 }
 
 AdminPortal::~AdminPortal()
@@ -40,11 +39,13 @@ String processor(const String &var)
   return String();
 }
 
+// Handle 404 not found responses.
 void AdminPortal::onNotFound(AsyncWebServerRequest *request)
 {
   request->send(SPIFFS, "/404.html", String(), false, processor);
 }
 
+// Handles upload of firmware.
 void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
 {
   if (!index)
@@ -76,39 +77,63 @@ void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size
 }
 
 // Read config file.
-void AdminPortal::readConfigFile()
+void AdminPortal::deleteConfig()
 {
+  std::map<String, String> result;
   if (SPIFFS.begin())
   {
-    if(isDebug) Serial.println("mounted file system");
+    if (isDebug)
+      Serial.println("mounted file system");
+    if (SPIFFS.exists("/cfg.json"))
+    {
+      SPIFFS.remove("/cfg.json");
+    }
+  }
+}
+
+// Read config file.
+std::map<String, String> AdminPortal::loadConfig()
+{
+  std::map<String, String> result;
+  if (SPIFFS.begin())
+  {
+    if (isDebug)
+      Serial.println("mounted file system");
     if (SPIFFS.exists("/cfg.json"))
     {
       //file exists, reading and loading
-      if(isDebug) Serial.println("reading config file");
+      if (isDebug)
+        Serial.println("reading config file");
       File configFile = SPIFFS.open("/cfg.json", "r");
       if (configFile)
       {
-        if(isDebug) Serial.println("opened config file");
+        if (isDebug)
+          Serial.println("opened config file");
         size_t size = configFile.size();
         // Allocate a buffer to store contents of the file.
         std::unique_ptr<char[]> buf(new char[size]);
 
-        if(isDebug) Serial.println(buf.get());
+        if (isDebug)
+          Serial.println(buf.get());
         configFile.readBytes(buf.get(), size);
 
         DynamicJsonDocument doc(1024);
         DeserializationError error = deserializeJson(doc, configFile);
         if (!error)
         {
-          if(isDebug) Serial.println("\nparsed json");
+          if (isDebug)
+            Serial.println("\nparsed json");
 
-          _config->flow_mlpp_in = doc["flow_mlpp_in"];
-          _config->flow_mlpp_out = doc["flow_mlpp_out"];
-          _config->flow_moving_avg = doc["flow_moving_avg"];
+          JsonObject root = doc.as<JsonObject>();
+          for (JsonPair kv : root)
+          {
+            result[kv.key().c_str()] = kv.value().as<String>();
+          }
         }
         else
         {
-          if(isDebug) Serial.println("failed to load json config");
+          if (isDebug)
+            Serial.println("failed to load json config");
         }
         configFile.close();
       }
@@ -116,34 +141,75 @@ void AdminPortal::readConfigFile()
   }
   else
   {
-    if(isDebug) Serial.println("failed to mount FS");
+    if (isDebug)
+      Serial.println("failed to mount FS");
   }
+  return result;
   //end read
 }
 
 // Save config file.
-void AdminPortal::writeConfigFile()
+void AdminPortal::saveConfig(std::map<String, String> config)
 {
-  if(isDebug) Serial.println("saving config");
+  if (isDebug)
+    Serial.println("saving config");
   DynamicJsonDocument doc(1024);
-  doc["flow_mlpp_in"] = _config->flow_mlpp_in;
-  doc["flow_mlpp_out"] = _config->flow_mlpp_out;
-  doc["flow_moving_avg"] = _config->flow_moving_avg;
+
+  // Dynamically map values.
+  std::map<String, String>::iterator it;
+  for (it = config.begin(); it != config.end(); it++)
+  {
+    doc[it->first] = it->second;
+  }
 
   File configFile = SPIFFS.open("/cfg.json", "w");
   if (!configFile)
   {
-    if(isDebug) Serial.println("failed to open config file for writing");
+    if (isDebug)
+      Serial.println("failed to open config file for writing");
   }
 
   // Serialize JSON to file
-  if (serializeJson(doc, configFile) == 0) {
+  if (serializeJson(doc, configFile) == 0)
+  {
     Serial.println(F("Failed to write to file"));
   }
   configFile.close();
   //end save
 }
 
+void AdminPortal::addConfigFormElement(String name, String label, String group, String value)
+{
+  if (!_configFormElements)
+    _configFormElements = new std::list<ConfigFormElement *>();
+
+  ConfigFormElement *configFormElement = new ConfigFormElement(name, label, group, value);
+  _configFormElements->push_back(configFormElement);
+}
+
+String AdminPortal::getConfigForm()
+{
+  String result;
+  if (!_configFormElements)
+    return result;
+
+  std::list<ConfigFormElement *>::iterator it;
+  String lastGroup = "";
+  for (it = _configFormElements->begin(); it != _configFormElements->end(); ++it)
+  {
+    String tmp = "";
+    if (lastGroup != (*it)->group) {
+      tmp += "<div class=\"row\"><div class=\"col c12\"><h3>"+(*it)->group+"</h3></div></div>";
+      lastGroup = (*it)->group;
+    }
+    tmp += "<div class=\"row\">";
+    tmp += "<div class=\"col c2\"><label for=\"" + (*it)->name + "\"></label></div>";
+    tmp += "<div class=\"col c10\"><input type=\"number\" name=\"" + (*it)->name + "\" value=\"%" + (*it)->name + "%\" class=\"smooth\" /></div>";
+    tmp += "</div>";
+  }
+
+  return result;
+}
 
 const char *www_username = "admin";
 const char *www_password = "esp32";
@@ -182,7 +248,7 @@ void AdminPortal::setup(void)
     Serial.println("An Error has occurred while mounting SPIFFS");
     return;
   }
-  
+
   // Display landing page.
   _webServer->on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/index.html", String(), false, processor);
