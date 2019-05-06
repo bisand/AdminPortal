@@ -32,6 +32,14 @@
             "platforms": "espressif8266"
         }, 
         {
+            "name": "ArduinoJson", 
+            "platforms": "espressif8266"
+        }, 
+        {
+            "name": "ArduinoJson", 
+            "platforms": "espressif32"
+        }, 
+        {
             "name": "ESP Async WebServer", 
             "platforms": "espressif32"
         }
