@@ -40,6 +40,14 @@
             "platforms": "espressif32"
         }, 
         {
+            "name": "ESP8266WiFi", 
+            "platforms": "espressif8266"
+        }, 
+        {
+            "name": "WiFi", 
+            "platforms": "espressif32"
+        }, 
+        {
             "name": "ESP Async WebServer", 
             "platforms": "espressif32"
         }
