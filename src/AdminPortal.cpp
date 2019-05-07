@@ -207,10 +207,16 @@ String AdminPortal::getConfigForm()
   return result;
 }
 
+void AdminPortal::log(const char *topic, const char *text)
+{
+  _events->send(text, topic, millis());
+}
+
 void AdminPortal::log(const char *text)
 {
   _events->send(text, "log_event", millis());
 }
+
 const char *www_username = "admin";
 const char *www_password = "esp32";
 const char *www_realm = "Custom Auth Realm";

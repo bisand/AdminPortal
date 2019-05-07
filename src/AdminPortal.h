@@ -53,6 +53,7 @@ public:
 
   void addConfigFormElement(String name, String label, String group, String value);
 
+  void log(const char *topic, const char *text);
   void log(const char *text);
 
   void setup();
