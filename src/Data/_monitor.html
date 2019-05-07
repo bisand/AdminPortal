@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Engine Monitor</title>
+</head>
+
+<body>
+    <h2>Debug Monitor</h2>
+    <div>
+        <ol>
+            <li>Test1</li>
+            <li>Test2</li>
+            <li>Test3</li>
+        </ol>
+    </div>
+
+    <script>
+        var eventList = document.querySelector('ol');
+        if (!!window.EventSource) {
+            var source = new EventSource('/log_events');
+            source.addEventListener('log_event', function (e) {
+                var newElement = document.createElement("li");
+                newElement.textContent = e.data;
+                eventList.appendChild(newElement);
+            }, false);
+        }
+    </script>
+</body>
+
+</html>

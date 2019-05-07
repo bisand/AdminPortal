@@ -1,26 +1,21 @@
-/*
- * OTAWebUpdater.ino Example from ArduinoOTA Library
- * Rui Santos 
- * Complete Project Details https://randomnerdtutorials.com
- */
-
 #include "AdminPortal.h"
 
-AdminPortal::AdminPortal()
+AdminPortal::AdminPortal(const char *ssid, const char *password)
 {
-#ifdef ESP8266
-  _webServer = new ESP8266WebServer(80);
-#else
+  _ssid = ssid;
+  _host = ssid;
+  _password = password;
+
   _webServer = new AsyncWebServer(80);
-#endif
+  _events = new AsyncEventSource("/log_events");
   _apIP = new IPAddress(192, 168, 4, 1);
-  _ssid = (char *)"EngineMonitor";
-  _host = (char *)"EngineMonitor";
-  _password = (char *)"Password123";
 }
 
 AdminPortal::~AdminPortal()
 {
+  delete _webServer;
+  delete _events;
+  delete _apIP;
 }
 
 /*
@@ -292,6 +287,9 @@ void AdminPortal::setup(void)
 
   // Display 404 if no pages was found.
   _webServer->onNotFound(onNotFound);
+
+  _events->setAuthentication(www_username, www_password);
+  _webServer->addHandler(_events);
 
   _webServer->begin();
 }

@@ -5,7 +5,7 @@ AdminPortal *portal;
 
 void setup()
 {
-  portal = new AdminPortal();
+  portal = new AdminPortal("EngMon", "Password123");
 
   std::map<String, String> config = portal->loadConfig();
   if(config.size() < 1)

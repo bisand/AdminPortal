@@ -1,3 +1,4 @@
+#include <Arduino.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <Update.h>
@@ -6,6 +7,7 @@
 #include "SPIFFS.h"
 #include <list>
 #include <map>
+#include "WebPages.h"
 
 class ConfigFormElement
 {
@@ -24,12 +26,14 @@ class AdminPortal
 {
 private:
   AsyncWebServer *_webServer;
+  AsyncEventSource *_events;
+
   unsigned long _currMillis = 0;
   unsigned long _interval = 1;
   IPAddress *_apIP;
-  char *_host;
-  char *_ssid;
-  char *_password;
+  const char *_host;
+  const char *_ssid;
+  const char *_password;
   bool isDebug;
 
   std::list<ConfigFormElement *> *_configFormElements;
@@ -40,7 +44,7 @@ private:
   String getConfigForm();
 
 public:
-  AdminPortal();
+  AdminPortal(const char *ssid, const char *password);
   ~AdminPortal();
 
   std::map<String, String> loadConfig();
