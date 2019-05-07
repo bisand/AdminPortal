@@ -7,16 +7,20 @@
 
 <body>
     <h2>Debug Monitor</h2>
-    <div>
-        <ol>
-            <li>Test1</li>
-            <li>Test2</li>
-            <li>Test3</li>
+    <p>
+        <button id='clrButton'>Clear List</button>
+    </p>
+    <p>
+        <ol id='debugList'>
         </ol>
-    </div>
+    </p>
 
     <script>
-        var eventList = document.querySelector('ol');
+        var eventList = document.querySelector('#debugList');
+        var button = document.querySelector('#clrButton');
+        button.onclick = function () {
+            eventList.innerHTML = "";
+        };
         if (!!window.EventSource) {
             var source = new EventSource('/log_events');
             source.addEventListener('log_event', function (e) {
@@ -28,4 +32,4 @@
     </script>
 </body>
 
-</html>
+</html> 
