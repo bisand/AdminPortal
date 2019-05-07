@@ -268,6 +268,11 @@ void AdminPortal::setup(void)
     request->send(SPIFFS, "/config.html", String(), false, processor);
   });
 
+  // Display configuration page.
+  _webServer->on("/monitor", HTTP_GET, [](AsyncWebServerRequest *request) {
+    request->send(SPIFFS, "/monitor.html", String(), false, processor);
+  });
+
   // Display firmware upgrade page.
   _webServer->on("/upgrade", HTTP_GET, [](AsyncWebServerRequest *request) {
     if (!request->authenticate(www_username, www_password))
