@@ -131,6 +131,7 @@
         if (!!window.EventSource) {
             var source = new EventSource('/log_events');
             source.addEventListener('log_event', function (e) {
+                console.log('Event ' + e);
                 var newElement = document.createElement("li");
                 newElement.textContent = e.data;
                 eventList.appendChild(newElement);

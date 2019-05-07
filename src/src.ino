@@ -21,7 +21,16 @@ void setup()
   portal->setup();
 }
 
+unsigned long _currMillis = 0;
+unsigned long _interval = 1000;
+
 void loop()
 {
+  if (millis() - _currMillis > _interval)
+  {
+    _currMillis = millis();
+    portal->log(String(millis()).c_str());
+  }
+
   portal->loop();
 }

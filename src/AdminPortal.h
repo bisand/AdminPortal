@@ -29,7 +29,7 @@ private:
   AsyncEventSource *_events;
 
   unsigned long _currMillis = 0;
-  unsigned long _interval = 1;
+  unsigned long _interval = 500;
   IPAddress *_apIP;
   const char *_host;
   const char *_ssid;
@@ -52,6 +52,8 @@ public:
   void deleteConfig();
 
   void addConfigFormElement(String name, String label, String group, String value);
+
+  void log(const char *text);
 
   void setup();
   void loop();

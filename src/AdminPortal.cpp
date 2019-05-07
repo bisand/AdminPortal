@@ -193,8 +193,9 @@ String AdminPortal::getConfigForm()
   for (it = _configFormElements->begin(); it != _configFormElements->end(); ++it)
   {
     String tmp = "";
-    if (lastGroup != (*it)->group) {
-      tmp += "<div class=\"row\"><div class=\"col c12\"><h3>"+(*it)->group+"</h3></div></div>";
+    if (lastGroup != (*it)->group)
+    {
+      tmp += "<div class=\"row\"><div class=\"col c12\"><h3>" + (*it)->group + "</h3></div></div>";
       lastGroup = (*it)->group;
     }
     tmp += "<div class=\"row\">";
@@ -206,6 +207,10 @@ String AdminPortal::getConfigForm()
   return result;
 }
 
+void AdminPortal::log(const char *text)
+{
+  _events->send(text, "log_event", millis());
+}
 const char *www_username = "admin";
 const char *www_password = "esp32";
 const char *www_realm = "Custom Auth Realm";
