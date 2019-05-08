@@ -1,3 +1,4 @@
+R"rawText(
 <!DOCTYPE html>
 <html>
 
@@ -13,3 +14,4 @@
 </body>
 
 </html>
+)rawText"
