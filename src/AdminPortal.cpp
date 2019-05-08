@@ -305,7 +305,7 @@ void AdminPortal::setup(void)
     if(client->lastId()){
       Serial.printf("Client reconnected! Last message ID that it gat is: %u\n", client->lastId());
     }
-    client->send("hello!",NULL,millis(),1000);
+    client->send("hello!","log_event",millis(),1000);
   });
   // _events->setAuthentication(www_username, www_password);
   _webServer->addHandler(_events);
