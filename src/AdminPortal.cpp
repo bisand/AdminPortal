@@ -301,6 +301,12 @@ void AdminPortal::setup(void)
   // Display 404 if no pages was found.
   _webServer->onNotFound(onNotFound);
 
+  _events->onConnect([](AsyncEventSourceClient *client){
+    if(client->lastId()){
+      Serial.printf("Client reconnected! Last message ID that it gat is: %u\n", client->lastId());
+    }
+    client->send("hello!",NULL,millis(),1000);
+  });
   // _events->setAuthentication(www_username, www_password);
   _webServer->addHandler(_events);
 

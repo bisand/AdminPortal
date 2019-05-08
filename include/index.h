@@ -15,8 +15,8 @@ R"rawText(
         </p>
         <p><a href='/docs'>Documentation</a></p>
         <p><a href='/config'>Configuration</a></p>
-        <p><a href='/upgrade'>Firmware Upgrade</a></p>
         <p><a href='/monitor'>Debug monitor</a></p>
+        <p><a href='/upgrade'>Firmware Upgrade</a></p>
     </div>
 </body>
 
