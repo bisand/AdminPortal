@@ -4,14 +4,14 @@ AdminPortal::AdminPortal()
 {
   _webServer = new AsyncWebServer(80);
   _events = new AsyncEventSource("/log_events");
-  _apIP = new IPAddress(192, 168, 4, 1);
+  _wp = new WebPages();
 }
 
 AdminPortal::~AdminPortal()
 {
   delete _webServer;
   delete _events;
-  delete _apIP;
+  delete _wp;
 }
 
 /*
@@ -235,39 +235,57 @@ void AdminPortal::setup(void)
   }
 
   // Display landing page.
-  _webServer->on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/index.html", String(), false, processor);
+  _webServer->on("/", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/index.html"))
+      request->send(SPIFFS, "/index.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->index_html, processor );
   });
 
-  _webServer->on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/index.html", String(), false, processor);
+  _webServer->on("/index.html", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/index.html"))
+      request->send(SPIFFS, "/index.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->index_html, processor );
   });
 
   _webServer->on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/style.css", "text/css");
   });
 
-  _webServer->on("/docs", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/docs.html", String(), false, processor);
+  _webServer->on("/docs", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/docs.html"))
+      request->send(SPIFFS, "/docs.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->docs_html, processor );
   });
 
   // Display configuration page.
-  _webServer->on("/config", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (!request->authenticate(www_username, www_password))
-      return request->requestAuthentication();
-    request->send(SPIFFS, "/config.html", String(), false, processor);
+  _webServer->on("/config", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    // if (!request->authenticate(www_username, www_password))
+    //   return request->requestAuthentication();
+    if (SPIFFS.exists("/config.html"))
+      request->send(SPIFFS, "/config.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->config_html, processor );
   });
 
   // Display configuration page.
-  _webServer->on("/monitor", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/monitor.html", String(), false, processor);
+  _webServer->on("/monitor", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/monitor.html"))
+      request->send(SPIFFS, "/monitor.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->monitor_html, processor );
   });
 
   // Display firmware upgrade page.
-  _webServer->on("/upgrade", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (!request->authenticate(www_username, www_password))
-      return request->requestAuthentication();
-    request->send(SPIFFS, "/upgrade.html", String(), false, processor);
+  _webServer->on("/upgrade", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    // if (!request->authenticate(www_username, www_password))
+    //   return request->requestAuthentication();
+    if (SPIFFS.exists("/upgrade.html"))
+      request->send(SPIFFS, "/upgrade.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->upgrade_html, processor );
   });
 
   /*handling uploading firmware file */

@@ -35,6 +35,7 @@ private:
   const char *_ssid;
   const char *_password;
   bool isDebug;
+  WebPages *_wp;
 
   std::list<ConfigFormElement *> *_configFormElements;
 

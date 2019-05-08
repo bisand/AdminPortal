@@ -1,21 +1,21 @@
 #include <Arduino.h>
 
-struct WebPages
+class WebPages
 {
     public:
-        const char *index = 
+        const char *index_html = 
         #include "index.h"
         ;
-        const char *docs = 
+        const char *docs_html = 
         #include "docs.h"
         ;
-        const char *config = 
+        const char *config_html = 
         #include "config.h"
         ;
-        const char *monitor = 
+        const char *monitor_html = 
         #include "monitor.h"
         ;
-        const char *upgrade = 
+        const char *upgrade_html = 
         #include "upgrade.h"
         ;
 };
