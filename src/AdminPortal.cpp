@@ -169,6 +169,11 @@ void AdminPortal::saveConfig(std::map<String, String> config)
   //end save
 }
 
+bool AdminPortal::formatSPIFFS()
+{
+  return SPIFFS.format();
+}
+
 void AdminPortal::addConfigFormElement(String name, String label, String group, String value)
 {
   if (!_configFormElements)

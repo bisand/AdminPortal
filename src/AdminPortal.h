@@ -50,6 +50,7 @@ public:
   std::map<String, String> loadConfig();
   void saveConfig(std::map<String, String> config);
   void deleteConfig();
+  bool formatSPIFFS();
 
   void addConfigFormElement(String name, String label, String group, String value);
 
