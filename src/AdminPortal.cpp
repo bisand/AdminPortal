@@ -303,7 +303,7 @@ void AdminPortal::setup(void)
 
   _events->onConnect([](AsyncEventSourceClient *client){
     if(client->lastId()){
-      Serial.printf("Client reconnected! Last message ID that it gat is: %u\n", client->lastId());
+      Serial.printf("Client reconnected! Last message ID that it got was: %u\n", client->lastId());
     }
     client->send("hello!","log_event",millis(),1000);
   });
