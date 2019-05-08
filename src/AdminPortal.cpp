@@ -1,11 +1,7 @@
 #include "AdminPortal.h"
 
-AdminPortal::AdminPortal(const char *ssid, const char *password)
+AdminPortal::AdminPortal()
 {
-  _ssid = ssid;
-  _host = ssid;
-  _password = password;
-
   _webServer = new AsyncWebServer(80);
   _events = new AsyncEventSource("/log_events");
   _apIP = new IPAddress(192, 168, 4, 1);
@@ -227,28 +223,6 @@ String authFailResponse = "Authentication Failed";
  */
 void AdminPortal::setup(void)
 {
-  Serial.begin(115200);
-
-  WiFi.softAPConfig(*_apIP, *_apIP, IPAddress(255, 25, 255, 0));
-  WiFi.softAP(_ssid, _password);
-
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(_ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.softAPIP());
-
-  /*use mdns for host name resolution*/
-  if (!MDNS.begin(_host))
-  {
-    Serial.println("Error setting up MDNS responder!");
-    while (1)
-    {
-      delay(1000);
-    }
-  }
-  Serial.println("mDNS responder started");
-
   if (!SPIFFS.begin(true))
   {
     Serial.println("An Error has occurred while mounting SPIFFS");
@@ -304,7 +278,7 @@ void AdminPortal::setup(void)
   // Display 404 if no pages was found.
   _webServer->onNotFound(onNotFound);
 
-  _events->setAuthentication(www_username, www_password);
+  // _events->setAuthentication(www_username, www_password);
   _webServer->addHandler(_events);
 
   _webServer->begin();

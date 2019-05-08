@@ -44,7 +44,7 @@ private:
   String getConfigForm();
 
 public:
-  AdminPortal(const char *ssid, const char *password);
+  AdminPortal();
   ~AdminPortal();
 
   std::map<String, String> loadConfig();
