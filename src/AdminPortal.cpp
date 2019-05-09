@@ -239,14 +239,14 @@ void AdminPortal::setup(void)
     if (SPIFFS.exists("/index.html"))
       request->send(SPIFFS, "/index.html", String(), false, processor);
     else
-      request->send_P(200, "text/html", _wp->index_html, processor );
+      request->send_P(200, "text/html", _wp->index_html, processor);
   });
 
   _webServer->on("/index.html", HTTP_GET, [&](AsyncWebServerRequest *request) {
     if (SPIFFS.exists("/index.html"))
       request->send(SPIFFS, "/index.html", String(), false, processor);
     else
-      request->send_P(200, "text/html", _wp->index_html, processor );
+      request->send_P(200, "text/html", _wp->index_html, processor);
   });
 
   _webServer->on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -257,7 +257,7 @@ void AdminPortal::setup(void)
     if (SPIFFS.exists("/docs.html"))
       request->send(SPIFFS, "/docs.html", String(), false, processor);
     else
-      request->send_P(200, "text/html", _wp->docs_html, processor );
+      request->send_P(200, "text/html", _wp->docs_html, processor);
   });
 
   // Display configuration page.
@@ -267,7 +267,7 @@ void AdminPortal::setup(void)
     if (SPIFFS.exists("/config.html"))
       request->send(SPIFFS, "/config.html", String(), false, processor);
     else
-      request->send_P(200, "text/html", _wp->config_html, processor );
+      request->send_P(200, "text/html", _wp->config_html, processor);
   });
 
   // Display configuration page.
@@ -275,7 +275,7 @@ void AdminPortal::setup(void)
     if (SPIFFS.exists("/monitor.html"))
       request->send(SPIFFS, "/monitor.html", String(), false, processor);
     else
-      request->send_P(200, "text/html", _wp->monitor_html, processor );
+      request->send_P(200, "text/html", _wp->monitor_html, processor);
   });
 
   // Display firmware upgrade page.
@@ -285,11 +285,13 @@ void AdminPortal::setup(void)
     if (SPIFFS.exists("/upgrade.html"))
       request->send(SPIFFS, "/upgrade.html", String(), false, processor);
     else
-      request->send_P(200, "text/html", _wp->upgrade_html, processor );
+      request->send_P(200, "text/html", _wp->upgrade_html, processor);
   });
 
   /*handling uploading firmware file */
-  _webServer->on("/uploadfw", HTTP_POST, [](AsyncWebServerRequest *request) { request->send(200); }, onUpload);
+  _webServer->on("/uploadfw", HTTP_POST, [](AsyncWebServerRequest *request) {
+    request->send(200);
+  }, onUpload);
 
   // Display landing page.
   _webServer->on("/logout", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -301,11 +303,12 @@ void AdminPortal::setup(void)
   // Display 404 if no pages was found.
   _webServer->onNotFound(onNotFound);
 
-  _events->onConnect([](AsyncEventSourceClient *client){
-    if(client->lastId()){
+  _events->onConnect([](AsyncEventSourceClient *client) {
+    if (client->lastId())
+    {
       Serial.printf("Client reconnected! Last message ID that it got was: %u\n", client->lastId());
     }
-    client->send("hello!","log_event",millis(),1000);
+    client->send("hello!", "log_event", millis(), 1000);
   });
   // _events->setAuthentication(www_username, www_password);
   _webServer->addHandler(_events);
