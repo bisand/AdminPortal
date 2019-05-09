@@ -73,7 +73,7 @@ void AdminPortal::deleteConfig()
   std::map<String, String> result;
   if (SPIFFS.begin())
   {
-    if (isDebug)
+    if (_isDebug)
       Serial.println("mounted file system");
     if (SPIFFS.exists("/cfg.json"))
     {
@@ -88,23 +88,23 @@ std::map<String, String> AdminPortal::loadConfig()
   std::map<String, String> result;
   if (SPIFFS.begin())
   {
-    if (isDebug)
+    if (_isDebug)
       Serial.println("mounted file system");
     if (SPIFFS.exists("/cfg.json"))
     {
       //file exists, reading and loading
-      if (isDebug)
+      if (_isDebug)
         Serial.println("reading config file");
       File configFile = SPIFFS.open("/cfg.json", "r");
       if (configFile)
       {
-        if (isDebug)
+        if (_isDebug)
           Serial.println("opened config file");
         size_t size = configFile.size();
         // Allocate a buffer to store contents of the file.
         std::unique_ptr<char[]> buf(new char[size]);
 
-        if (isDebug)
+        if (_isDebug)
           Serial.println(buf.get());
         configFile.readBytes(buf.get(), size);
 
@@ -112,7 +112,7 @@ std::map<String, String> AdminPortal::loadConfig()
         DeserializationError error = deserializeJson(doc, configFile);
         if (!error)
         {
-          if (isDebug)
+          if (_isDebug)
             Serial.println("\nparsed json");
 
           JsonObject root = doc.as<JsonObject>();
@@ -123,7 +123,7 @@ std::map<String, String> AdminPortal::loadConfig()
         }
         else
         {
-          if (isDebug)
+          if (_isDebug)
             Serial.println("failed to load json config");
         }
         configFile.close();
@@ -132,7 +132,7 @@ std::map<String, String> AdminPortal::loadConfig()
   }
   else
   {
-    if (isDebug)
+    if (_isDebug)
       Serial.println("failed to mount FS");
   }
   return result;
@@ -142,7 +142,7 @@ std::map<String, String> AdminPortal::loadConfig()
 // Save config file.
 void AdminPortal::saveConfig(std::map<String, String> config)
 {
-  if (isDebug)
+  if (_isDebug)
     Serial.println("saving config");
   DynamicJsonDocument doc(1024);
 
@@ -156,7 +156,7 @@ void AdminPortal::saveConfig(std::map<String, String> config)
   File configFile = SPIFFS.open("/cfg.json", "w");
   if (!configFile)
   {
-    if (isDebug)
+    if (_isDebug)
       Serial.println("failed to open config file for writing");
   }
 

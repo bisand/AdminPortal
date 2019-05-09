@@ -31,10 +31,7 @@ private:
   unsigned long _currMillis = 0;
   unsigned long _interval = 500;
   IPAddress *_apIP;
-  const char *_host;
-  const char *_ssid;
-  const char *_password;
-  bool isDebug;
+  bool _isDebug;
   WebPages *_wp;
 
   std::list<ConfigFormElement *> *_configFormElements;
