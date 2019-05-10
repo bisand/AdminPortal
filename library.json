@@ -1,9 +1,10 @@
 {
     "name": "AdminPortal",
-    "description": "Portal for configuring ESP32/ESP8266 via web interface.",
+    "description": "Portal for configuring ESP32 via web interface.",
     "keywords": [
         "http",
-        "config"
+        "config",
+        "WiFi"
     ],
     "authors": [
         {
