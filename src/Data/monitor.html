@@ -21,27 +21,28 @@
         </div>
     </nav>
     <button class="btn-close btn btn-sm">×</button>
-    <div class="boxcontainer">
-        <div class="box box-1">
-            <div class="hero">
-                <h2>Debug monitor</h2>
-            </div>
+    <div class="container section">
+        <div class="header">
+            <h2>Debug monitor</h2>
             <p>
-                Pulses: <input type="text" id="txtPulses" /><br/>
-                Flow: <input type="text" id="txtFlow" /><br />
-                Elapsed In: <input type="text" id="txtElapsedIn" /><br/>
-                Elapsed Out: <input type="text" id="txtElapsedOut" /><br />
-                Ram: <input type="text" id="txtRam" />
+                <label for="txtPulses">Pulses</label>
+                <input type="text" id="txtPulses" />
+                <label for="txtPulses">Flow</label>
+                <input type="text" id="txtFlow" />
+                <label for="txtPulses">Elapsed In</label>
+                <input type="text" id="txtElapsedIn" />
+                <label for="txtPulses">Elapsed Out</label>
+                <input type="text" id="txtElapsedOut" />
+                <label for="txtPulses">Ram</label>
+                <input type="text" id="txtRam" />
             </p>
             <p>
                 <button id="clrButton">Clear List</button>
             </p>
         </div>
-        <div class="box box-2">
-            <message class="great">
-                <ol id="debugList">
-                </ol>
-            </message>
+        <div class="fullcontent">
+            <ol id="debugList">
+            </ol>
         </div>
     </div>
     <script>
@@ -55,6 +56,7 @@
             source.addEventListener('log_event', function (e) {
                 var newElement = document.createElement("li");
                 newElement.textContent = e.data;
+                eventList.appendChild(newElement)
             }, false);
             source.addEventListener('pulses', function (e) {
                 var newElement = document.querySelector("#txtPulses");

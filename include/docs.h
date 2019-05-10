@@ -1,18 +1,30 @@
 R"rawText(
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>Engine Monitor</title>
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <title>Engine Monitor</title>
+
+    <link href="style.css" rel="stylesheet" type="text/css">
+</head>
 <body>
-    <div>
-        <h2>Documentation</h2>
-        <p>The purpose of this product is to be able to monitor a boat engine</p>
-        <p>Please see <a href='https://github.com/bisand/AdminPortal/'>AdminPortal</a> on GitHub</p>
+    <nav class="nav" tabindex="-1" onclick="this.focus()">
+        <div class="container">
+            <a class="pagename current" href="index.html" style="white-space: nowrap;">Engine Monitor</a>
+            <a href="/">Home</a>
+            <a href="/docs">Docs</a>
+            <a href="/config">Configuration</a>
+            <a href="/upgrade">Update Firmware</a>
+        </div>
+    </nav>
+    <button class="btn-close btn btn-sm">×</button>
+    <div class="container">
+        <div class="hero">
+            <h2>Documentation</h2>
+        </div>
     </div>
 </body>
-
 </html>
 )rawText"

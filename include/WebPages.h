@@ -18,4 +18,10 @@ class WebPages
         const char *upgrade_html = 
         #include "upgrade.h"
         ;
+        const char *style_css = 
+        #include "style.h"
+        ;
+        const char *p404_html = 
+        #include "404.h"
+        ;
 };

@@ -1,24 +1,45 @@
 R"rawText(
 <!DOCTYPE html>
 <html>
-
 <head>
-    <title>Engine Monitor</title>
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <title>Engine Monitor</title>
+
+    <link href="style.css" rel="stylesheet" type="text/css">
+</head>
 <body>
-    <div>
-        <h2>Welcome to EngineMonitor</h2>
-        <p>The purpose of this product is to be able to monitor a boat engine</p>
-        <p>For information on how to customize the admin interface, please see
-            <a href='https://github.com/bisand/AdminPortal/'>AdminPortal</a> on GitHub
-        </p>
-        <p><a href='/docs'>Documentation</a></p>
-        <p><a href='/config'>Configuration</a></p>
-        <p><a href='/monitor'>Debug monitor</a></p>
-        <p><a href='/upgrade'>Firmware Upgrade</a></p>
+    <nav class="nav" tabindex="-1" onclick="this.focus()">
+        <div class="container">
+            <a class="pagename current" href="index.html" style="white-space: nowrap;">Engine Monitor</a>
+            <a href="/">Home</a>
+            <a href="/docs">Docs</a>
+            <a href="/config">Configuration</a>
+            <a href="/upgrade">Update Firmware</a>
+        </div>
+    </nav>
+    <button class="btn-close btn btn-sm">×</button>
+    <div class="container">
+        <div class="hero">
+            <h2>Welcome to EngineMonitor</h2>
+            <p>The purpose of this product is to be able to monitor a boat engine</p>
+        </div>
+        <div class="row">
+            <div class="col c4">
+                <h3>Documentation</h3><p>Here you can view the current documentation for this product</p><a href="/docs" class="btn btn-sm btn-b">Documentation</a>
+            </div>
+            <div class="col c4">
+                <h3>Configuration</h3><p>Configure parameters for connected sensors. You can also enable and disable functions.</p><a href="/config" class="btn btn-sm btn-a">Configuration</a>
+            </div>
+            <div class="col c4">
+                <h3>Monitor</h3><p>Monitor debug data in realtime. Enable and disable debug.</p><a href="/monitor" class="btn btn-sm">Monitor</a>
+            </div>
+            <div class="col c4">
+                <h3>Firmware Upgrade</h3><p>Upgrade formware. Use this with caution!!</p><a href="/upgrade" class="btn btn-sm btn-c">Firmware Upgrade</a>
+            </div>
+        </div>
     </div>
 </body>
-
 </html>
 )rawText"
