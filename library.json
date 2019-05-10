@@ -7,8 +7,8 @@
     ],
     "authors": [
         {
-            "email": null,
-            "url": null,
+            "email": "andre@biseth.net",
+            "url": "https://github.com/bisand/",
             "maintainer": true,
             "name": "André Biseth"
         }
