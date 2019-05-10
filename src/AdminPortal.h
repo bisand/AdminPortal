@@ -1,16 +1,13 @@
-#ifdef ESP8266
-#include <ESP8266WiFi.h>
-#include <DNSServer.h>
-#else
+#include <Arduino.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
-#endif
 #include <Update.h>
 #include <ESPAsyncWebServer.h>
 #include "ArduinoJson.h"
 #include "SPIFFS.h"
 #include <list>
 #include <map>
+#include "WebPages.h"
 
 class ConfigFormElement
 {
@@ -28,18 +25,14 @@ public:
 class AdminPortal
 {
 private:
-#ifdef ESP8266
-  ESP8266WebServer *_webServer;
-#else
   AsyncWebServer *_webServer;
-#endif
+  AsyncEventSource *_events;
+
   unsigned long _currMillis = 0;
-  unsigned long _interval = 1;
+  unsigned long _interval = 500;
   IPAddress *_apIP;
-  char *_host;
-  char *_ssid;
-  char *_password;
-  bool isDebug;
+  bool _isDebug;
+  WebPages *_wp;
 
   std::list<ConfigFormElement *> *_configFormElements;
 
@@ -55,8 +48,12 @@ public:
   std::map<String, String> loadConfig();
   void saveConfig(std::map<String, String> config);
   void deleteConfig();
+  bool formatSPIFFS();
 
   void addConfigFormElement(String name, String label, String group, String value);
+
+  void log(const char *topic, const char *text);
+  void log(const char *text);
 
   void setup();
   void loop();

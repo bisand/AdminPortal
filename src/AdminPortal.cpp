@@ -1,26 +1,17 @@
-/*
- * OTAWebUpdater.ino Example from ArduinoOTA Library
- * Rui Santos 
- * Complete Project Details https://randomnerdtutorials.com
- */
-
 #include "AdminPortal.h"
 
 AdminPortal::AdminPortal()
 {
-#ifdef ESP8266
-  _webServer = new ESP8266WebServer(80);
-#else
   _webServer = new AsyncWebServer(80);
-#endif
-  _apIP = new IPAddress(192, 168, 4, 1);
-  _ssid = (char *)"EngineMonitor";
-  _host = (char *)"EngineMonitor";
-  _password = (char *)"Password123";
+  _events = new AsyncEventSource("/log_events");
+  _wp = new WebPages();
 }
 
 AdminPortal::~AdminPortal()
 {
+  delete _webServer;
+  delete _events;
+  delete _wp;
 }
 
 /*
@@ -82,7 +73,7 @@ void AdminPortal::deleteConfig()
   std::map<String, String> result;
   if (SPIFFS.begin())
   {
-    if (isDebug)
+    if (_isDebug)
       Serial.println("mounted file system");
     if (SPIFFS.exists("/cfg.json"))
     {
@@ -97,23 +88,23 @@ std::map<String, String> AdminPortal::loadConfig()
   std::map<String, String> result;
   if (SPIFFS.begin())
   {
-    if (isDebug)
+    if (_isDebug)
       Serial.println("mounted file system");
     if (SPIFFS.exists("/cfg.json"))
     {
       //file exists, reading and loading
-      if (isDebug)
+      if (_isDebug)
         Serial.println("reading config file");
       File configFile = SPIFFS.open("/cfg.json", "r");
       if (configFile)
       {
-        if (isDebug)
+        if (_isDebug)
           Serial.println("opened config file");
         size_t size = configFile.size();
         // Allocate a buffer to store contents of the file.
         std::unique_ptr<char[]> buf(new char[size]);
 
-        if (isDebug)
+        if (_isDebug)
           Serial.println(buf.get());
         configFile.readBytes(buf.get(), size);
 
@@ -121,7 +112,7 @@ std::map<String, String> AdminPortal::loadConfig()
         DeserializationError error = deserializeJson(doc, configFile);
         if (!error)
         {
-          if (isDebug)
+          if (_isDebug)
             Serial.println("\nparsed json");
 
           JsonObject root = doc.as<JsonObject>();
@@ -132,7 +123,7 @@ std::map<String, String> AdminPortal::loadConfig()
         }
         else
         {
-          if (isDebug)
+          if (_isDebug)
             Serial.println("failed to load json config");
         }
         configFile.close();
@@ -141,7 +132,7 @@ std::map<String, String> AdminPortal::loadConfig()
   }
   else
   {
-    if (isDebug)
+    if (_isDebug)
       Serial.println("failed to mount FS");
   }
   return result;
@@ -151,7 +142,7 @@ std::map<String, String> AdminPortal::loadConfig()
 // Save config file.
 void AdminPortal::saveConfig(std::map<String, String> config)
 {
-  if (isDebug)
+  if (_isDebug)
     Serial.println("saving config");
   DynamicJsonDocument doc(1024);
 
@@ -165,7 +156,7 @@ void AdminPortal::saveConfig(std::map<String, String> config)
   File configFile = SPIFFS.open("/cfg.json", "w");
   if (!configFile)
   {
-    if (isDebug)
+    if (_isDebug)
       Serial.println("failed to open config file for writing");
   }
 
@@ -176,6 +167,11 @@ void AdminPortal::saveConfig(std::map<String, String> config)
   }
   configFile.close();
   //end save
+}
+
+bool AdminPortal::formatSPIFFS()
+{
+  return SPIFFS.format();
 }
 
 void AdminPortal::addConfigFormElement(String name, String label, String group, String value)
@@ -198,8 +194,9 @@ String AdminPortal::getConfigForm()
   for (it = _configFormElements->begin(); it != _configFormElements->end(); ++it)
   {
     String tmp = "";
-    if (lastGroup != (*it)->group) {
-      tmp += "<div class=\"row\"><div class=\"col c12\"><h3>"+(*it)->group+"</h3></div></div>";
+    if (lastGroup != (*it)->group)
+    {
+      tmp += "<div class=\"row\"><div class=\"col c12\"><h3>" + (*it)->group + "</h3></div></div>";
       lastGroup = (*it)->group;
     }
     tmp += "<div class=\"row\">";
@@ -209,6 +206,16 @@ String AdminPortal::getConfigForm()
   }
 
   return result;
+}
+
+void AdminPortal::log(const char *topic, const char *text)
+{
+  _events->send(text, topic, millis());
+}
+
+void AdminPortal::log(const char *text)
+{
+  _events->send(text, "log_event", millis());
 }
 
 const char *www_username = "admin";
@@ -221,28 +228,6 @@ String authFailResponse = "Authentication Failed";
  */
 void AdminPortal::setup(void)
 {
-  Serial.begin(115200);
-
-  WiFi.softAPConfig(*_apIP, *_apIP, IPAddress(255, 25, 255, 0));
-  WiFi.softAP(_ssid, _password);
-
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(_ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.softAPIP());
-
-  /*use mdns for host name resolution*/
-  if (!MDNS.begin(_host))
-  {
-    Serial.println("Error setting up MDNS responder!");
-    while (1)
-    {
-      delay(1000);
-    }
-  }
-  Serial.println("mDNS responder started");
-
   if (!SPIFFS.begin(true))
   {
     Serial.println("An Error has occurred while mounting SPIFFS");
@@ -250,38 +235,63 @@ void AdminPortal::setup(void)
   }
 
   // Display landing page.
-  _webServer->on("/", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/index.html", String(), false, processor);
+  _webServer->on("/", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/index.html"))
+      request->send(SPIFFS, "/index.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->index_html, processor);
   });
 
-  _webServer->on("/index.html", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/index.html", String(), false, processor);
+  _webServer->on("/index.html", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/index.html"))
+      request->send(SPIFFS, "/index.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->index_html, processor);
   });
 
   _webServer->on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
     request->send(SPIFFS, "/style.css", "text/css");
   });
 
-  _webServer->on("/docs", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/docs.html", String(), false, processor);
+  _webServer->on("/docs", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/docs.html"))
+      request->send(SPIFFS, "/docs.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->docs_html, processor);
   });
 
   // Display configuration page.
-  _webServer->on("/config", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (!request->authenticate(www_username, www_password))
-      return request->requestAuthentication();
-    request->send(SPIFFS, "/config.html", String(), false, processor);
+  _webServer->on("/config", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    // if (!request->authenticate(www_username, www_password))
+    //   return request->requestAuthentication();
+    if (SPIFFS.exists("/config.html"))
+      request->send(SPIFFS, "/config.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->config_html, processor);
+  });
+
+  // Display configuration page.
+  _webServer->on("/monitor", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/monitor.html"))
+      request->send(SPIFFS, "/monitor.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->monitor_html, processor);
   });
 
   // Display firmware upgrade page.
-  _webServer->on("/upgrade", HTTP_GET, [](AsyncWebServerRequest *request) {
-    if (!request->authenticate(www_username, www_password))
-      return request->requestAuthentication();
-    request->send(SPIFFS, "/upgrade.html", String(), false, processor);
+  _webServer->on("/upgrade", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    // if (!request->authenticate(www_username, www_password))
+    //   return request->requestAuthentication();
+    if (SPIFFS.exists("/upgrade.html"))
+      request->send(SPIFFS, "/upgrade.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->upgrade_html, processor);
   });
 
   /*handling uploading firmware file */
-  _webServer->on("/uploadfw", HTTP_POST, [](AsyncWebServerRequest *request) { request->send(200); }, onUpload);
+  _webServer->on("/uploadfw", HTTP_POST, [](AsyncWebServerRequest *request) {
+    request->send(200);
+  }, onUpload);
 
   // Display landing page.
   _webServer->on("/logout", HTTP_GET, [](AsyncWebServerRequest *request) {
@@ -292,6 +302,16 @@ void AdminPortal::setup(void)
 
   // Display 404 if no pages was found.
   _webServer->onNotFound(onNotFound);
+
+  _events->onConnect([](AsyncEventSourceClient *client) {
+    if (client->lastId())
+    {
+      Serial.printf("Client reconnected! Last message ID that it got was: %u\n", client->lastId());
+    }
+    client->send("hello!", "log_event", millis(), 1000);
+  });
+  // _events->setAuthentication(www_username, www_password);
+  _webServer->addHandler(_events);
 
   _webServer->begin();
 }
