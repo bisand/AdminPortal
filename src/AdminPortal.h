@@ -1,4 +1,6 @@
 #include <Arduino.h>
+#include <esp_int_wdt.h>
+#include <esp_task_wdt.h>
 #include <WiFi.h>
 #include <ESPmDNS.h>
 #include <Update.h>
@@ -40,6 +42,7 @@ private:
   static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 
   String getConfigForm();
+  void hard_restart();
 
 public:
   AdminPortal();
