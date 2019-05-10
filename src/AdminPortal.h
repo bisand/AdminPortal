@@ -42,7 +42,6 @@ private:
   static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 
   String getConfigForm();
-  void hard_restart();
 
 public:
   AdminPortal();

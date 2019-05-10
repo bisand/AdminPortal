@@ -1,6 +1,10 @@
 #include "AdminPortal.h"
 
-bool restartNow = false;
+void hard_esp_restart() {
+  esp_task_wdt_init(1,true);
+  esp_task_wdt_add(NULL);
+  while(true);
+}
 
 AdminPortal::AdminPortal()
 {
@@ -54,8 +58,8 @@ void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size
     }
     else
     {
-      restartNow = true; //Set flag so main loop can issue restart call
       Serial.println("Update complete");
+      hard_esp_restart();
     }
   }
 }
@@ -320,18 +324,5 @@ void AdminPortal::loop(void)
   if (millis() - _currMillis > _interval)
   {
     _currMillis = millis();
-    if (restartNow)
-    {
-      Serial.println("Restart");
-      restartNow = false;
-      delay(1000);
-      hard_restart();
-    }
   }
-}
-
-void AdminPortal::hard_restart() {
-  esp_task_wdt_init(1,true);
-  esp_task_wdt_add(NULL);
-  while(true);
 }
