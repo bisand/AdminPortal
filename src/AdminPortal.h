@@ -16,6 +16,7 @@ public:
   String name;
   String label;
   String group;
+  String valueType;
   String value;
 
   ConfigFormElement(String name, String label, String group, String value);
@@ -36,7 +37,6 @@ private:
 
   std::list<ConfigFormElement *> *_configFormElements;
 
-  static void onNotFound(AsyncWebServerRequest *request);
   static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
 
   String getConfigForm();

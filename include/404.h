@@ -22,7 +22,8 @@ R"rawText(
     <button class="btn-close btn btn-sm">×</button>
     <div class="container">
         <div class="hero">
-            <h2>Firmware Upgrade</h2>
+            <h1>404</h1>
+            <h2>Not found</h2>
         </div>
     </div>
 </body>

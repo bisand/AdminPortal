@@ -30,12 +30,6 @@ String processor(const String &var)
   return String();
 }
 
-// Handle 404 not found responses.
-void AdminPortal::onNotFound(AsyncWebServerRequest *request)
-{
-  request->send(SPIFFS, "/404.html", String(), false, processor);
-}
-
 // Handles upload of firmware.
 void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
 {
@@ -196,13 +190,11 @@ String AdminPortal::getConfigForm()
     String tmp = "";
     if (lastGroup != (*it)->group)
     {
-      tmp += "<div class=\"row\"><div class=\"col c12\"><h3>" + (*it)->group + "</h3></div></div>";
+      tmp += "<h3>" + (*it)->group + "</h3>";
       lastGroup = (*it)->group;
     }
-    tmp += "<div class=\"row\">";
-    tmp += "<div class=\"col c2\"><label for=\"" + (*it)->name + "\"></label></div>";
-    tmp += "<div class=\"col c10\"><input type=\"number\" name=\"" + (*it)->name + "\" value=\"%" + (*it)->name + "%\" class=\"smooth\" /></div>";
-    tmp += "</div>";
+    tmp += "<label for=\"" + (*it)->name + "\"></label>";
+    tmp += "<input type=\""+(*it)->valueType+"\" name=\"" + (*it)->name + "\" value=\"%" + (*it)->name + "%\" class=\"smooth\" />";
   }
 
   return result;
@@ -249,8 +241,11 @@ void AdminPortal::setup(void)
       request->send_P(200, "text/html", _wp->index_html, processor);
   });
 
-  _webServer->on("/style.css", HTTP_GET, [](AsyncWebServerRequest *request) {
-    request->send(SPIFFS, "/style.css", "text/css");
+  _webServer->on("/style.css", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    if (SPIFFS.exists("/style.css"))
+      request->send(SPIFFS, "/style.css", "text/css");
+    else
+      request->send_P(200, "text/css", _wp->index_html, processor);
   });
 
   _webServer->on("/docs", HTTP_GET, [&](AsyncWebServerRequest *request) {
@@ -301,7 +296,12 @@ void AdminPortal::setup(void)
   });
 
   // Display 404 if no pages was found.
-  _webServer->onNotFound(onNotFound);
+  _webServer->onNotFound([&](AsyncWebServerRequest *request){
+    if (SPIFFS.exists("/404.html"))
+      request->send(SPIFFS, "/404.html", String(), false, processor);
+    else
+      request->send_P(200, "text/html", _wp->p404_html, processor);
+  });
 
   _events->onConnect([](AsyncEventSourceClient *client) {
     if (client->lastId())
