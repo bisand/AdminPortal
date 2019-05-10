@@ -323,6 +323,8 @@ void AdminPortal::loop(void)
     if (restartNow)
     {
       Serial.println("Restart");
+      restartNow = false;
+      delay(1000);
       ESP.restart();
     }
   }
