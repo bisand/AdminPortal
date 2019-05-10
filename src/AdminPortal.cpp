@@ -323,7 +323,15 @@ void AdminPortal::loop(void)
     if (restartNow)
     {
       Serial.println("Restart");
-      ESP.restart();
+      restartNow = false;
+      delay(1000);
+      hard_restart();
     }
   }
+}
+
+void AdminPortal::hard_restart() {
+  esp_task_wdt_init(1,true);
+  esp_task_wdt_add(NULL);
+  while(true);
 }
