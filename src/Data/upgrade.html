@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -8,6 +9,7 @@
 
     <link href="style.css" rel="stylesheet" type="text/css">
 </head>
+
 <body>
     <nav class="nav" tabindex="-1" onclick="this.focus()">
         <div class="container">
@@ -15,14 +17,18 @@
             <a href="/">Home</a>
             <a href="/docs">Docs</a>
             <a href="/config">Configuration</a>
-            <a href="/upgrade">Update Firmware</a>
+            <a href="/monitor">Debug monitor</a>
+            <a href="#">Update Firmware</a>
         </div>
     </nav>
     <button class="btn-close btn btn-sm">×</button>
     <div class="container">
-        <div class="hero">
-            <h2>Firmware Upgrade</h2>
-        </div>
+        <h2 style="white-space: nowrap;">Firmware Upgrade</h2>
+        <form method="POST" action="uploadfw" enctype="multipart/form-data">
+            <label for="fileUpload">Firmware file</label>
+            <input type="file" id="fileUpload" name="fileUpload" value="" style="min-width: 250px; width:50%">
+            <input type="submit" value="Upload firmware" class="btn btn-sm btn-a" />
+        </form>
     </div>
 </body>
 </html>

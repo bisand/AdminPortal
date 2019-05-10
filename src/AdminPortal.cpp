@@ -1,5 +1,7 @@
 #include "AdminPortal.h"
 
+bool restartNow = false;
+
 AdminPortal::AdminPortal()
 {
   _webServer = new AsyncWebServer(80);
@@ -13,11 +15,6 @@ AdminPortal::~AdminPortal()
   delete _events;
   delete _wp;
 }
-
-/*
- * Login page
- */
-const char *loginIndex = "";
 
 // Replaces placeholder with LED state value
 String processor(const String &var)
@@ -33,30 +30,32 @@ String processor(const String &var)
 // Handles upload of firmware.
 void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
 {
+  uint32_t free_space = (ESP.getFreeSketchSpace() - 0x1000) & 0xFFFFF000;
   if (!index)
   {
-    Serial.printf("Update: %s\n", filename.c_str());
-    if (!Update.begin(UPDATE_SIZE_UNKNOWN))
-    { //start with max available size
-      Update.printError(Serial);
-    }
-  }
-  else if (!final)
-  {
-    if (Update.write(data, len) != len)
+    Serial.println("Update");
+    //Update.runAsync(true);
+    if (!Update.begin(free_space))
     {
       Update.printError(Serial);
     }
   }
-  else if (final)
+
+  if (Update.write(data, len) != len)
   {
-    if (Update.end(true))
-    { //true to set the size to the current progress
-      Serial.printf("Update Success: %u\nRebooting...\n", index);
+    Update.printError(Serial);
+  }
+
+  if (final)
+  {
+    if (!Update.end(true))
+    {
+      Update.printError(Serial);
     }
     else
     {
-      Update.printError(Serial);
+      restartNow = true; //Set flag so main loop can issue restart call
+      Serial.println("Update complete");
     }
   }
 }
@@ -194,7 +193,7 @@ String AdminPortal::getConfigForm()
       lastGroup = (*it)->group;
     }
     tmp += "<label for=\"" + (*it)->name + "\"></label>";
-    tmp += "<input type=\""+(*it)->valueType+"\" name=\"" + (*it)->name + "\" value=\"%" + (*it)->name + "%\" class=\"smooth\" />";
+    tmp += "<input type=\"" + (*it)->valueType + "\" name=\"" + (*it)->name + "\" value=\"%" + (*it)->name + "%\" class=\"smooth\" />";
   }
 
   return result;
@@ -296,7 +295,7 @@ void AdminPortal::setup(void)
   });
 
   // Display 404 if no pages was found.
-  _webServer->onNotFound([&](AsyncWebServerRequest *request){
+  _webServer->onNotFound([&](AsyncWebServerRequest *request) {
     if (SPIFFS.exists("/404.html"))
       request->send(SPIFFS, "/404.html", String(), false, processor);
     else
@@ -321,5 +320,10 @@ void AdminPortal::loop(void)
   if (millis() - _currMillis > _interval)
   {
     _currMillis = millis();
+    if (restartNow)
+    {
+      Serial.println("Restart");
+      ESP.restart();
+    }
   }
 }
