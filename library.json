@@ -18,7 +18,7 @@
         "type": "git",
         "url": "https://github.com/bisand/AdminPortal.git"
     },
-    "version": "0.2.0",
+    "version": "0.2.1",
     "license": "LGPL-3.0",
     "frameworks": [
         "arduino"
