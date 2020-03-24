@@ -1,9 +1,11 @@
 #include "AdminPortal.h"
 
-void hard_esp_restart() {
-  esp_task_wdt_init(1,true);
+void hard_esp_restart()
+{
+  esp_task_wdt_init(1, true);
   esp_task_wdt_add(NULL);
-  while(true);
+  while (true)
+    ;
 }
 
 AdminPortal::AdminPortal()
@@ -67,7 +69,6 @@ void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size
 // Read config file.
 void AdminPortal::deleteConfig()
 {
-  std::map<String, String> result;
   if (SPIFFS.begin())
   {
     if (_isDebug)
@@ -101,12 +102,13 @@ std::map<String, String> AdminPortal::loadConfig()
         // Allocate a buffer to store contents of the file.
         std::unique_ptr<char[]> buf(new char[size]);
 
+        configFile.readBytes(buf.get(), size);
+        configFile.close();
         if (_isDebug)
           Serial.println(buf.get());
-        configFile.readBytes(buf.get(), size);
 
         DynamicJsonDocument doc(1024);
-        DeserializationError error = deserializeJson(doc, configFile);
+        DeserializationError error = deserializeJson(doc, buf.get());
         if (!error)
         {
           if (_isDebug)
@@ -123,7 +125,6 @@ std::map<String, String> AdminPortal::loadConfig()
           if (_isDebug)
             Serial.println("failed to load json config");
         }
-        configFile.close();
       }
     }
   }
@@ -148,6 +149,12 @@ void AdminPortal::saveConfig(std::map<String, String> config)
   for (it = config.begin(); it != config.end(); it++)
   {
     doc[it->first] = it->second;
+    if (_isDebug)
+    {
+      Serial.print(it->first);
+      Serial.print(" : ");
+      Serial.println(it->second);
+    }
   }
 
   File configFile = SPIFFS.open("/cfg.json", "w");
@@ -163,6 +170,8 @@ void AdminPortal::saveConfig(std::map<String, String> config)
     Serial.println(F("Failed to write to file"));
   }
   configFile.close();
+  if (_isDebug)
+    Serial.println("saving done!");
   //end save
 }
 
@@ -288,8 +297,8 @@ void AdminPortal::setup(void)
 
   /*handling uploading firmware file */
   _webServer->on("/uploadfw", HTTP_POST, [](AsyncWebServerRequest *request) {
-    request->send(200);
-  }, onUpload);
+        request->send(200);
+      }, onUpload);
 
   // Display landing page.
   _webServer->on("/logout", HTTP_GET, [](AsyncWebServerRequest *request) {
