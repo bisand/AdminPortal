@@ -25,23 +25,8 @@
     <div class="container">
         <h2>Configuration</h2>
         <form method="POST">
-            <h3>Fuel flow</h3>
-            <label for="mlppIn">Input sensor ml/p:</label>
-            <input type="number" name="mlppIn" value="%FLOW_MLPPIN%" class="smooth" />
-            <label for="mlppOut">Output sensor ml/p:</label>
-            <input type="number" name="mlppOut" value="%FLOW_MLPPOUT%" class="smooth" />
-            <label for="flowMovAvg">Moving average:</label>
-            <input type="number" name="flowMovAvg" value="%FLOW_MOVAVG%" class="smooth" />
-            <h3>Engine RPM</h3>
-            <label for="mlppIn">Multiplier:</label>
-            <input type="number" name="mlppIn" value="%RPM_MULTIPLIER%" class="smooth" />
-            <h3>Coolant temperature</h3>
-            <label for="mlppIn">Adjustment:</label>
-            <input type="number" name="mlppIn" value="%TEMP_ADJUSTMENT%" class="smooth" />
-            <h3>Oil preassure</h3>
-            <label for="mlppIn">Adjustment:</label>
-            <input type="number" name="mlppIn" value="%OIL_ADJUSTMENT%" class="smooth" />
-            <input type="submit" value="Save" class="btn btn-sm btn-a">
+            %CONFIG_FORM%
+            <input type="submit" value="Save" class="btn btn-sm btn-a" />
         </form>
     </div>
 </body>

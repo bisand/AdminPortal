@@ -1,9 +1,11 @@
 #include "AdminPortal.h"
 
-void hard_esp_restart() {
-  esp_task_wdt_init(1,true);
+void hard_esp_restart()
+{
+  esp_task_wdt_init(1, true);
   esp_task_wdt_add(NULL);
-  while(true);
+  while (true)
+    ;
 }
 
 AdminPortal::AdminPortal()
@@ -21,15 +23,24 @@ AdminPortal::~AdminPortal()
 }
 
 // Replaces placeholder with LED state value
-String processor(const String &var)
+String AdminPortal::processor(const String &var)
 {
   Serial.println(var);
   if (var == "VERSION")
   {
     return "v1.0";
   }
+  if (var == "CONFIG_FORM")
+  {
+    return this->getConfigForm();
+  }
   return String();
 }
+
+// void AdminPortal::setTemplateProcessor(AwsTemplateProcessor processorCallback)
+// {
+//   // AdminPortal::_processorCallback = processorCallback;
+// }
 
 // Handles upload of firmware.
 void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final)
@@ -67,7 +78,6 @@ void AdminPortal::onUpload(AsyncWebServerRequest *request, String filename, size
 // Read config file.
 void AdminPortal::deleteConfig()
 {
-  std::map<String, String> result;
   if (SPIFFS.begin())
   {
     if (_isDebug)
@@ -101,12 +111,13 @@ std::map<String, String> AdminPortal::loadConfig()
         // Allocate a buffer to store contents of the file.
         std::unique_ptr<char[]> buf(new char[size]);
 
+        configFile.readBytes(buf.get(), size);
+        configFile.close();
         if (_isDebug)
           Serial.println(buf.get());
-        configFile.readBytes(buf.get(), size);
 
         DynamicJsonDocument doc(1024);
-        DeserializationError error = deserializeJson(doc, configFile);
+        DeserializationError error = deserializeJson(doc, buf.get());
         if (!error)
         {
           if (_isDebug)
@@ -123,7 +134,6 @@ std::map<String, String> AdminPortal::loadConfig()
           if (_isDebug)
             Serial.println("failed to load json config");
         }
-        configFile.close();
       }
     }
   }
@@ -148,6 +158,12 @@ void AdminPortal::saveConfig(std::map<String, String> config)
   for (it = config.begin(); it != config.end(); it++)
   {
     doc[it->first] = it->second;
+    if (_isDebug)
+    {
+      Serial.print(it->first);
+      Serial.print(" : ");
+      Serial.println(it->second);
+    }
   }
 
   File configFile = SPIFFS.open("/cfg.json", "w");
@@ -163,6 +179,8 @@ void AdminPortal::saveConfig(std::map<String, String> config)
     Serial.println(F("Failed to write to file"));
   }
   configFile.close();
+  if (_isDebug)
+    Serial.println("saving done!");
   //end save
 }
 
@@ -171,33 +189,56 @@ bool AdminPortal::formatSPIFFS()
   return SPIFFS.format();
 }
 
-void AdminPortal::addConfigFormElement(String name, String label, String group, String value)
+void AdminPortal::addConfigFormElement(String name, String label, String group, String value, String valueType)
 {
-  if (!_configFormElements)
-    _configFormElements = new std::list<ConfigFormElement *>();
-
-  ConfigFormElement *configFormElement = new ConfigFormElement(name, label, group, value);
-  _configFormElements->push_back(configFormElement);
+  ConfigFormElement element;
+  element.name = name;
+  element.label = label;
+  element.group = group;
+  element.value = value;
+  element.valueType = valueType;
+  Serial.print("> ");
+  Serial.print(name);
+  Serial.print(" : ");
+  Serial.println(value);
+  _configFormElements.push_back(element);
 }
 
 String AdminPortal::getConfigForm()
 {
-  String result;
-  if (!_configFormElements)
-    return result;
+  String result = "";
 
-  std::list<ConfigFormElement *>::iterator it;
+  std::list<ConfigFormElement>::iterator it;
   String lastGroup = "";
-  for (it = _configFormElements->begin(); it != _configFormElements->end(); ++it)
+  Serial.println("getConfigForm()");
+
+  for (it = _configFormElements.begin(); it != _configFormElements.end(); ++it)
   {
+    Serial.print("> ");
+    Serial.print(it->name);
+    Serial.print(" : ");
+    Serial.println(it->value);
+    Serial.flush();
     String tmp = "";
-    if (lastGroup != (*it)->group)
+    if (lastGroup != it->group)
     {
-      tmp += "<h3>" + (*it)->group + "</h3>";
-      lastGroup = (*it)->group;
+      tmp += "<h3>" + String(it->group) + "</h3>";
+      lastGroup = String(it->group);
     }
-    tmp += "<label for=\"" + (*it)->name + "\"></label>";
-    tmp += "<input type=\"" + (*it)->valueType + "\" name=\"" + (*it)->name + "\" value=\"%" + (*it)->name + "%\" class=\"smooth\" />";
+    tmp += "<label for=\"" + String(it->name) + "\">" + String(it->name) + "</label>";
+    if (it->valueType.equalsIgnoreCase("checkbox"))
+    {
+      std::stringstream chk(it->value.c_str());
+      bool isChecked;
+      chk >> std::boolalpha >> isChecked;
+      it->value = isChecked ? "checked" : "";
+      tmp += "<input type=\"" + String(it->valueType) + "\" id=\"" + String(it->name) + "\" name=\"" + String(it->name) + "\" checked=\"" + String(it->value) + "\" class=\"smooth\" />";
+    }
+    else
+    {
+      tmp += "<input type=\"" + String(it->valueType) + "\" id=\"" + String(it->name) + "\" name=\"" + String(it->name) + "\" value=\"" + String(it->value) + "\" class=\"smooth\" />";
+    }
+    result += tmp;
   }
 
   return result;
@@ -232,78 +273,114 @@ void AdminPortal::setup(void)
   // Display landing page.
   _webServer->on("/", HTTP_GET, [&](AsyncWebServerRequest *request) {
     if (SPIFFS.exists("/index.html"))
-      request->send(SPIFFS, "/index.html", String(), false, processor);
+      request->send(SPIFFS, "/index.html", String(), false, [this](const String &var) -> String { return this->processor(var); });
     else
-      request->send_P(200, "text/html", _wp->index_html, processor);
+      request->send_P(200, "text/html", _wp->index_html, [this](const String &var) -> String { return this->processor(var); });
   });
 
   _webServer->on("/index.html", HTTP_GET, [&](AsyncWebServerRequest *request) {
     if (SPIFFS.exists("/index.html"))
-      request->send(SPIFFS, "/index.html", String(), false, processor);
+      request->send(SPIFFS, "/index.html", String(), false, [this](const String &var) -> String { return this->processor(var); });
     else
-      request->send_P(200, "text/html", _wp->index_html, processor);
+      request->send_P(200, "text/html", _wp->index_html, [this](const String &var) -> String { return this->processor(var); });
   });
 
   _webServer->on("/style.css", HTTP_GET, [&](AsyncWebServerRequest *request) {
     if (SPIFFS.exists("/style.css"))
       request->send(SPIFFS, "/style.css", "text/css");
     else
-      request->send_P(200, "text/css", _wp->index_html, processor);
+      request->send_P(200, "text/css", _wp->index_html, [this](const String &var) -> String { return this->processor(var); });
   });
 
   _webServer->on("/docs", HTTP_GET, [&](AsyncWebServerRequest *request) {
     if (SPIFFS.exists("/docs.html"))
-      request->send(SPIFFS, "/docs.html", String(), false, processor);
+      request->send(SPIFFS, "/docs.html", String(), false, [this](const String &var) -> String { return this->processor(var); });
     else
-      request->send_P(200, "text/html", _wp->docs_html, processor);
+      request->send_P(200, "text/html", _wp->docs_html, [this](const String &var) -> String { return this->processor(var); });
   });
 
   // Display configuration page.
   _webServer->on("/config", HTTP_GET, [&](AsyncWebServerRequest *request) {
-    // if (!request->authenticate(www_username, www_password))
-    //   return request->requestAuthentication();
+    if (!request->authenticate(www_username, www_password))
+      return request->requestAuthentication();
     if (SPIFFS.exists("/config.html"))
-      request->send(SPIFFS, "/config.html", String(), false, processor);
+      request->send(SPIFFS, "/config.html", String(), false, [this](const String &var) -> String { return this->processor(var); });
     else
-      request->send_P(200, "text/html", _wp->config_html, processor);
+      request->send_P(200, "text/html", _wp->config_html, [this](const String &var) -> String { return this->processor(var); });
+  });
+
+  _webServer->on("/config", HTTP_POST, [&](AsyncWebServerRequest *request) {
+    if (!request->authenticate(www_username, www_password))
+      return request->requestAuthentication();
+
+    //List all parameters
+    int params = request->params();
+    for (int i = 0; i < params; i++)
+    {
+      AsyncWebParameter *p = request->getParam(i);
+      if (p->isFile())
+      { //p->isPost() is also true
+        Serial.printf("FILE[%s]: %s, size: %u\n", p->name().c_str(), p->value().c_str(), p->size());
+      }
+      else if (p->isPost())
+      {
+        Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+      }
+      else
+      {
+        Serial.printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
+      }
+    }
+
+    if (SPIFFS.exists("/config.html"))
+      request->send(SPIFFS, "/config.html", String(), false, [this](const String &var) -> String { return this->processor(var); });
+    else
+      request->send_P(200, "text/html", _wp->config_html, [this](const String &var) -> String { return this->processor(var); });
   });
 
   // Display configuration page.
   _webServer->on("/monitor", HTTP_GET, [&](AsyncWebServerRequest *request) {
+    if (!request->authenticate(www_username, www_password))
+      return request->requestAuthentication();
     if (SPIFFS.exists("/monitor.html"))
-      request->send(SPIFFS, "/monitor.html", String(), false, processor);
+      request->send(SPIFFS, "/monitor.html", String(), false, [this](const String &var) -> String { return this->processor(var); });
     else
-      request->send_P(200, "text/html", _wp->monitor_html, processor);
+      request->send_P(200, "text/html", _wp->monitor_html, [this](const String &var) -> String { return this->processor(var); });
   });
 
   // Display firmware upgrade page.
   _webServer->on("/upgrade", HTTP_GET, [&](AsyncWebServerRequest *request) {
-    // if (!request->authenticate(www_username, www_password))
-    //   return request->requestAuthentication();
+    if (!request->authenticate(www_username, www_password))
+      return request->requestAuthentication();
     if (SPIFFS.exists("/upgrade.html"))
-      request->send(SPIFFS, "/upgrade.html", String(), false, processor);
+      request->send(SPIFFS, "/upgrade.html", String(), false, [this](const String &var) -> String { return this->processor(var); });
     else
-      request->send_P(200, "text/html", _wp->upgrade_html, processor);
+      request->send_P(200, "text/html", _wp->upgrade_html, [this](const String &var) -> String { return this->processor(var); });
   });
 
   /*handling uploading firmware file */
-  _webServer->on("/uploadfw", HTTP_POST, [](AsyncWebServerRequest *request) {
-    request->send(200);
-  }, onUpload);
+  _webServer->on(
+      "/uploadfw", HTTP_POST, [](AsyncWebServerRequest *request) {
+        request->send(200);
+      },
+      onUpload);
 
   // Display landing page.
-  _webServer->on("/logout", HTTP_GET, [](AsyncWebServerRequest *request) {
+  _webServer->on("/logout", HTTP_GET, [&](AsyncWebServerRequest *request) {
     if (request->authenticate(www_username, www_password))
       return request->requestAuthentication();
-    request->send(SPIFFS, "/index.html", String(), false, processor);
+    if (SPIFFS.exists("/index.html"))
+      request->send(SPIFFS, "/index.html", String(), false, [this](const String &var) -> String { return this->processor(var); });
+    else
+      request->send_P(200, "text/html", _wp->index_html, [this](const String &var) -> String { return this->processor(var); });
   });
 
   // Display 404 if no pages was found.
   _webServer->onNotFound([&](AsyncWebServerRequest *request) {
     if (SPIFFS.exists("/404.html"))
-      request->send(SPIFFS, "/404.html", String(), false, processor);
+      request->send(SPIFFS, "/404.html", String(), false, [this](const String &var) -> String { return this->processor(var); });
     else
-      request->send_P(200, "text/html", _wp->p404_html, processor);
+      request->send_P(200, "text/html", _wp->p404_html, [this](const String &var) -> String { return this->processor(var); });
   });
 
   _events->onConnect([](AsyncEventSourceClient *client) {

@@ -11,18 +11,13 @@
 #include <map>
 #include "WebPages.h"
 
-class ConfigFormElement
+struct ConfigFormElement
 {
-private:
-public:
   String name;
   String label;
   String group;
   String valueType;
   String value;
-
-  ConfigFormElement(String name, String label, String group, String value);
-  ~ConfigFormElement();
 };
 
 class AdminPortal
@@ -37,22 +32,23 @@ private:
   bool _isDebug;
   WebPages *_wp;
 
-  std::list<ConfigFormElement *> *_configFormElements;
+  std::list<ConfigFormElement> _configFormElements;
 
   static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
-
   String getConfigForm();
 
 public:
   AdminPortal();
   ~AdminPortal();
 
+  String processor(const String &var);
+
   std::map<String, String> loadConfig();
   void saveConfig(std::map<String, String> config);
   void deleteConfig();
   bool formatSPIFFS();
 
-  void addConfigFormElement(String name, String label, String group, String value);
+  void addConfigFormElement(String name, String label, String group, String value, String valueType = "text");
 
   void log(const char *topic, const char *text);
   void log(const char *text);
