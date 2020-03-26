@@ -36,6 +36,7 @@ private:
 
   static void onUpload(AsyncWebServerRequest *request, String filename, size_t index, uint8_t *data, size_t len, bool final);
   String getConfigForm();
+  void (*_fillConfigElementsCallback)();
 
 public:
   AdminPortal();
@@ -48,7 +49,9 @@ public:
   void deleteConfig();
   bool formatSPIFFS();
 
+  void setfillConfigElementsCallback(void (*fillConfigElementsCallback)());
   void addConfigFormElement(String name, String label, String group, String value, String valueType = "text");
+  void clearConfigElements();
 
   void log(const char *topic, const char *text);
   void log(const char *text);

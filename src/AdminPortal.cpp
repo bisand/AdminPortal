@@ -225,14 +225,15 @@ String AdminPortal::getConfigForm()
       tmp += "<h3>" + String(it->group) + "</h3>";
       lastGroup = String(it->group);
     }
-    tmp += "<label for=\"" + String(it->name) + "\">" + String(it->name) + "</label>";
+    tmp += "<label for=\"" + String(it->name) + "\">" + String(it->label) + "</label>";
     if (it->valueType.equalsIgnoreCase("checkbox"))
     {
       std::stringstream chk(it->value.c_str());
       bool isChecked;
       chk >> std::boolalpha >> isChecked;
-      it->value = isChecked ? "checked" : "";
-      tmp += "<input type=\"" + String(it->valueType) + "\" id=\"" + String(it->name) + "\" name=\"" + String(it->name) + "\" checked=\"" + String(it->value) + "\" class=\"smooth\" />";
+      String checked = isChecked ? "checked=\"checked\"" : "";
+      tmp += "<input type=\"hidden\" name=\"" + String(it->name) + "\" value=\"false\" />";
+      tmp += "<input type=\"checkbox\" id=\"" + String(it->name) + "\" name=\"" + String(it->name) + "\"  value=\"true\" " + checked + "\" class=\"smooth\" />";
     }
     else
     {
@@ -258,6 +259,16 @@ const char *www_username = "admin";
 const char *www_password = "esp32";
 const char *www_realm = "Custom Auth Realm";
 String authFailResponse = "Authentication Failed";
+
+void AdminPortal::setfillConfigElementsCallback(void (*fillConfigElementsCallback)())
+{
+  _fillConfigElementsCallback = fillConfigElementsCallback;
+}
+
+void AdminPortal::clearConfigElements()
+{
+  _configFormElements.clear();
+}
 
 /*
  * setup function
@@ -303,6 +314,10 @@ void AdminPortal::setup(void)
   _webServer->on("/config", HTTP_GET, [&](AsyncWebServerRequest *request) {
     if (!request->authenticate(www_username, www_password))
       return request->requestAuthentication();
+
+    if (_fillConfigElementsCallback != NULL)
+      _fillConfigElementsCallback();
+
     if (SPIFFS.exists("/config.html"))
       request->send(SPIFFS, "/config.html", String(), false, [this](const String &var) -> String { return this->processor(var); });
     else
@@ -314,6 +329,7 @@ void AdminPortal::setup(void)
       return request->requestAuthentication();
 
     //List all parameters
+    std::map<String, String> config = loadConfig();
     int params = request->params();
     for (int i = 0; i < params; i++)
     {
@@ -325,12 +341,18 @@ void AdminPortal::setup(void)
       else if (p->isPost())
       {
         Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
+        config[String(p->name())] = String(p->value());
       }
       else
       {
         Serial.printf("GET[%s]: %s\n", p->name().c_str(), p->value().c_str());
       }
     }
+    saveConfig(config);
+
+
+    if (_fillConfigElementsCallback != NULL)
+      _fillConfigElementsCallback();
 
     if (SPIFFS.exists("/config.html"))
       request->send(SPIFFS, "/config.html", String(), false, [this](const String &var) -> String { return this->processor(var); });
