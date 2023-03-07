@@ -10,6 +10,7 @@
 #include <list>
 #include <map>
 #include "WebPages.h"
+#include <sstream>
 
 struct ConfigFormElement
 {
